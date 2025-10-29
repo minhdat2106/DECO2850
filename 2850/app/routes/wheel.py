@@ -15,7 +15,7 @@ from ..database import db_query, db_execute
 from ..utils import log_api_call, log_error
 
 logger = logging.getLogger("meal")
-router = APIRouter(prefix="/api/wheel", tags=["wheel"])
+router = APIRouter(tags=["wheel"])
 
 # ---------- helpers ----------
 
@@ -376,4 +376,5 @@ def get_latest_pick(
     except Exception as e:
         log_error(e, "wheel.get_latest_pick")
         raise HTTPException(500, "Internal server error")
+
 
