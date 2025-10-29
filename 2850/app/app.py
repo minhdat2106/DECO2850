@@ -15,7 +15,7 @@ from starlette.staticfiles import StaticFiles
 
 # ---- Routers (giữ nguyên theo cấu trúc dự án của bạn) ----
 # Nếu module của bạn ở path khác, chỉnh lại import cho đúng.
-from routes import user, family, submission, plan, meal_code, message, wheel, preferences
+from .routes import user, family, submission, plan, meal_code, message, wheel, preferences
 
 # =====================================================================
 # FastAPI app
@@ -35,6 +35,13 @@ app.add_middleware(
 # ---------- Static mount ----------
 # Frontend của bạn nằm trong thư mục "page/". Ví dụ: /page/index.html
 # Nếu bạn đặt thư mục khác, chỉnh lại ở đây.
+from pathlib import Path
+from starlette.staticfiles import StaticFiles
+
+BASE_DIR = Path(__file__).resolve().parent
+PAGE_DIR = BASE_DIR / "page"
+if PAGE_DIR.exists():
+    app.mount("/page", StaticFiles(directory=str(PAGE_DIR), html=False), name="page")
 if Path("page").exists():
     app.mount("/page", StaticFiles(directory="page", html=False), name="page")
 
@@ -337,4 +344,5 @@ if __name__ == "__main__":
     # Port mặc định 8765 để khớp file auth.js của bạn
     port = int(os.getenv("PORT", "8765"))
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+
 
