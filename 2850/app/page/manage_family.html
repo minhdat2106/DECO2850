@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meal Planner - Manage Family</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;}
+    .fade-in{animation:fadeIn .5s ease-in}@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .family-card{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+    .member-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px}
+    .role-badge{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600}
+    .role-holder{background:#fef3c7;color:#92400e}.role-member{background:#dbeafe;color:#1e40af}
+    .btn{padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-size:14px}
+    .btn-danger{background:#dc2626;color:#fff}.btn-danger:hover{background:#b91c1c}
+    .btn-warning{background:#f59e0b;color:#fff}.btn-warning:hover{background:#d97706}
+    .btn-secondary{background:#6b7280;color:#fff}.btn-secondary:hover{background:#4b5563}
+    .btn-success{background:#10b981;color:#fff}.btn-success:hover{background:#059669}
+    .hidden{display:none}
+    .error-message{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:12px;border-radius:8px;margin-bottom:16px}
+    .success-message{background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;padding:12px;border-radius:8px;margin-bottom:16px}
+    .empty-state{text-align:center;padding:48px 24px;color:#6b7280}
+    .modal{display:none;position:fixed;z-index:1000;inset:0;background:rgba(0,0,0,.5)}.modal.show{display:flex;align-items:center;justify-content:center}
+    .modal-content{background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%}
+    .form-input{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;margin-bottom:12px}
+    .field-caption{font-size:12px;color:#64748b}
+    .time-row{display:flex;align-items:center;gap:8px}
+    .time-input{width:110px}
+    .input-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;border-radius:9999px;font-size:12px;color:#64748b}
+  </style>
+</head>
+<body>
+<div class="min-h-screen py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center mb-8 fade-in">
+      <h1 class="text-4xl font-bold text-white mb-4">👨‍👩‍👧‍👦 Manage Family</h1>
+      <p class="text-xl text-blue-100">Manage your family members and settings</p>
+    </div>
+
+    <div id="errorMessage" class="error-message hidden"><span id="errorText"></span></div>
+    <div id="successMessage" class="success-message hidden"><span id="successText"></span></div>
+
+    <div id="familyList" class="space-y-6"></div>
+
+    <div id="emptyState" class="family-card empty-state hidden">
+      <div class="text-6xl mb-4">🏠</div>
+      <h3 class="text-xl font-semibold mb-2">No Families Found</h3>
+      <p class="mb-4">You haven't created or joined any families yet.</p>
+      <button id="createFamilyBtn" class="btn btn-secondary">Create Your First Family</button>
+    </div>
+
+    <div class="text-center mt-8">
+      <button id="backBtn" class="btn btn-secondary">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<div id="inviteModal" class="modal">
+  <div class="modal-content">
+    <h3 class="text-xl font-bold text-gray-800 mb-4">Invite Member</h3>
+    <p class="text-gray-600 mb-4">Family: <strong id="inviteFamilyName"></strong></p>
+    <input type="text" id="inviteUserId" class="form-input" placeholder="Enter User ID to invite"/>
+    <div class="flex space-x-2">
+      <button id="confirmInviteBtn" class="btn btn-success">Send Invitation</button>
+      <button id="cancelInviteBtn" class="btn btn-secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/notifications.js"></script>
+<script>
+  let currentUser = null;
+  let userFamilies = [];
+
+  // ===== Defaults & helpers =====
+  const DEFAULT_MEAL_TIMES = { breakfast: "08:00", lunch: "11:00", dinner: "17:30" };
+
+  function minutesToHHMM(mins){ const h=Math.floor((mins||0)/60), m=(mins||0)%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+  function normalizeMealTimesFromServer(obj){
+    const out = { ...DEFAULT_MEAL_TIMES };
+    if(!obj || typeof obj !== 'object') return out;
+    ['breakfast','lunch','dinner'].forEach(k=>{
+      const v = obj[k];
+      if(typeof v === 'string' && /^\d{2}:\d{2}$/.test(v)) out[k]=v;
+      if(Number.isFinite(v)) out[k]=minutesToHHMM(v);
+    });
+    return out;
+  }
+
+  // ===== fetch helper: KHÔNG gắn Content-Type cho GET =====
+  async function fetchJSON(url, opts = {}){
+    const method = (opts.method || 'GET').toUpperCase();
+    const headers = new Headers(opts.headers || {});
+    const init = { ...opts, method, headers };
+
+    if (method === 'GET' || method === 'HEAD') {
+      // GET/HEAD không set body, không set Content-Type
+      delete init.body;
+      headers.delete('Content-Type');
+    } else {
+      // Có body -> đảm bảo Content-Type
+      if (init.body != null && !headers.has('Content-Type')) {
+        headers.set('Content-Type','application/json');
+      }
+    }
+
+    const r = await fetch(url, init);
+    let data = null; try { data = await r.json(); } catch (_) { data = {}; }
+    if (!r.ok) throw new Error(data.detail || data.message || ('HTTP '+r.status));
+    return data;
+  }
+
+  // ===== Init =====
+  window.addEventListener('load', async () => {
+    // Đợi API_BASE sẵn sàng (từ auth.js)
+    if (!window.API_BASE) await window.API_READY;
+
+    initAuth(
+      async (user) => {
+        currentUser = user;
+        await loadUserFamilies();
+        setupEventListeners();
+        if (window.NotificationSystem) {
+          await window.NotificationSystem.clear('family', user.user_id);
+          window.NotificationSystem.start(user.user_id);
+        }
+      },
+      () => { window.location.href = 'index.html'; }
+    );
+  });
+
+  // ===== Data load =====
+  async function loadUserFamilies() {
+    try {
+      const response = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`, { cache:'no-store' });
+      if (!response.ok) { showError('Failed to load families.'); return; }
+
+      const userFamilyList = await response.json();
+      userFamilies = [];
+
+      for (const familyInfo of userFamilyList) {
+        // members
+        let members = [];
+        const membersResponse = await fetch(`${API_BASE}/family/${familyInfo.family_id}/members`, { cache:'no-store' });
+        if (membersResponse.ok) members = await membersResponse.json();
+
+        // meal-time settings (GET sạch, không Content-Type)
+        const settings = await fetchFamilyMealTimes(familyInfo.family_id);
+
+        userFamilies.push({
+          family_id: familyInfo.family_id,
+          family_name: familyInfo.family_name,
+          user_role: familyInfo.role,
+          members,
+          settings
+        });
+      }
+      displayFamilies();
+    } catch (error) {
+      console.error('Error loading families:', error);
+      showError('Error loading families. Please try again.');
+    }
+  }
+
+  // ===== Render =====
+  function displayFamilies() {
+    const familyList = document.getElementById('familyList');
+    const emptyState = document.getElementById('emptyState');
+
+    if (userFamilies.length === 0) {
+      familyList.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      return;
+    }
+    familyList.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    familyList.innerHTML = userFamilies.map(family => {
+      const isHolder = family.user_role === 'holder';
+      return createFamilyCard(family, isHolder);
+    }).join('');
+
+    userFamilies.forEach(f => bindMealTimeEvents(f));
+  }
+
+  function createFamilyCard(family, isHolder) {
+    const membersHtml = family.members.map(member => `
+      <div class="member-item">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+            ${member.display_name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div class="font-semibold">${member.display_name}</div>
+            <div class="text-sm text-gray-500">${member.user_id}</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="role-badge ${member.role === 'holder' ? 'role-holder' : 'role-member'}">${member.role}</span>
+          ${isHolder && member.user_id !== currentUser.user_id ? `
+            <button class="btn btn-danger"
+              onclick="removeMember('${family.family_id}', '${member.user_id}', '${member.display_name}')">
+              Remove
+            </button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    const mealTimesHtml = renderMealTimeSection(family, isHolder);
+
+    return `
+      <div class="family-card fade-in">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">${family.family_name}</h2>
+            <p class="text-gray-600">Family ID: ${family.family_id}</p>
+          </div>
+          ${isHolder ? `
+            <div class="flex space-x-2">
+              <button class="btn btn-success" onclick="showInviteDialog('${family.family_id}', '${family.family_name}')">+ Invite Member</button>
+              <button class="btn btn-warning" onclick="deleteFamily('${family.family_id}', '${family.family_name}')">Delete Family</button>
+            </div>` : ''}
+        </div>
+
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-3">Family Members (${family.members.length})</h3>
+          <div class="space-y-2">${membersHtml}</div>
+        </div>
+
+        ${mealTimesHtml}
+      </div>
+    `;
+  }
+
+  // ===== Actions =====
+  async function removeMember(familyId, userId, userName) {
+    if (!confirm(`Are you sure you want to remove ${userName} from this family?`)) return;
+    try {
+      const response = await fetch(`${API_BASE}/family/remove-member`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ family_id: familyId, user_id: userId })
+      });
+      const data = await response.json();
+      if (response.ok) { showSuccess(`${userName} has been removed from the family.`); await loadUserFamilies(); }
+      else { showError(data.detail || 'Failed to remove member.'); }
+    } catch (e) { console.error(e); showError('Error removing member. Please try again.'); }
+  }
+
+  async function deleteFamily(familyId, familyName) {
+    if (!confirm(`Are you sure you want to delete the family "${familyName}"? This action cannot be undone.`)) return;
+    try {
+      const response = await fetch(`${API_BASE}/family/delete`, {
+        method: 'DELETE',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ family_id: familyId })
+      });
+      const data = await response.json();
+      if (response.ok){ showSuccess(`Family "${familyName}" has been deleted.`); await loadUserFamilies(); }
+      else { showError(data.detail || 'Failed to delete family.'); }
+    } catch (e) { console.error(e); showError('Error deleting family. Please try again.'); }
+  }
+
+  let invitingFamilyId = null;
+  function setupEventListeners() {
+    document.getElementById('backBtn').addEventListener('click', () => window.location.href = 'home.html');
+    document.getElementById('createFamilyBtn').addEventListener('click', () => window.location.href = 'create_family.html');
+    document.getElementById('confirmInviteBtn').addEventListener('click', sendInvitation);
+    document.getElementById('cancelInviteBtn').addEventListener('click', closeInviteModal);
+  }
+  function showInviteDialog(familyId, familyName) {
+    invitingFamilyId = familyId;
+    document.getElementById('inviteFamilyName').textContent = familyName;
+    document.getElementById('inviteUserId').value = '';
+    document.getElementById('inviteModal').classList.add('show');
+  }
+  function closeInviteModal() {
+    document.getElementById('inviteModal').classList.remove('show');
+    invitingFamilyId = null;
+  }
+  async function sendInvitation() {
+    const userId = document.getElementById('inviteUserId').value.trim();
+    if (!userId) { alert('Please enter a User ID'); return; }
+    try {
+      const response = await fetch(`${API_BASE}/family/invite`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          family_id: invitingFamilyId,
+          invited_user_id: userId,
+          inviter_user_id: currentUser.user_id
+        })
+      });
+      const data = await response.json();
+      if (response.ok){ showSuccess(`Successfully invited ${userId} to the family!`); closeInviteModal(); await loadUserFamilies(); }
+      else { showError(data.detail || 'Failed to send invitation.'); }
+    } catch (e) { console.error(e); showError('Error sending invitation. Please try again.'); }
+  }
+
+  function hideMessages(){ document.getElementById('errorMessage').classList.add('hidden'); document.getElementById('successMessage').classList.add('hidden'); }
+  function showError(message){ hideMessages(); document.getElementById('errorText').textContent = message; document.getElementById('errorMessage').classList.remove('hidden'); }
+  function showSuccess(message){ hideMessages(); document.getElementById('successText').textContent = message; document.getElementById('successMessage').classList.remove('hidden'); }
+
+  // ===== Meal-time settings =====
+  async function fetchFamilyMealTimes(familyId){
+    const tryGets = [
+      `${API_BASE}/family/${familyId}/meal-times`,
+      `${API_BASE}/family/${familyId}/settings/meal-times`,
+      `${API_BASE}/family/${familyId}/settings`
+    ];
+    for (const url of tryGets){
+      try{
+        // GET sạch – không body/Content-Type
+        const r = await fetch(url, { cache:'no-store' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || data.message || ('HTTP '+r.status));
+        const payload = data.meal_times || data.mealTimes || data;
+        return normalizeMealTimesFromServer(payload);
+      }catch(_){ /* thử endpoint kế tiếp */ }
+    }
+    return { ...DEFAULT_MEAL_TIMES };
+  }
+
+  function renderMealTimeSection(family, isHolder){
+    const s = normalizeMealTimesFromServer(family.settings || {});
+    const disabledAttr = isHolder ? '' : 'disabled';
+    const hint = 'Used to auto-pick default date & meal in submissions.';
+    return `
+    <div class="mt-6 p-4 border rounded-lg bg-slate-50">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Meal Time Settings</h3>
+          <div class="field-caption">${hint}</div>
+        </div>
+        ${!isHolder ? `<div class="text-xs text-slate-500">Only holder can change</div>` : ''}
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700">Breakfast start at</label>
+          <div class="time-row mt-1">
+            <input id="bf_${family.family_id}" class="form-input time-input" type="time" value="${s.breakfast}" ${disabledAttr}>
+            <div class="input-icon">☀️</div>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Lunch start at</label>
+          <div class="time-row mt-1">
+            <input id="lu_${family.family_id}" class="form-input time-input" type="time" value="${s.lunch}" ${disabledAttr}>
+            <div class="input-icon">🍱</div>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Dinner start at</label>
+          <div class="time-row mt-1">
+            <input id="di_${family.family_id}" class="form-input time-input" type="time" value="${s.dinner}" ${disabledAttr}>
+            <div class="input-icon">🌙</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <button id="save_${family.family_id}" class="btn btn-success" ${isHolder?'':'disabled'}>Save Times</button>
+        <button id="reset_${family.family_id}" class="btn btn-secondary" ${isHolder?'':'disabled'}>Reset to Defaults</button>
+      </div>
+    </div>`;
+  }
+
+  function bindMealTimeEvents(family){
+    const saveBtn  = document.getElementById(`save_${family.family_id}`);
+    const resetBtn = document.getElementById(`reset_${family.family_id}`);
+    if (saveBtn){
+      saveBtn.addEventListener('click', async ()=>{
+        const payload = {
+          family_id: family.family_id,
+          breakfast: document.getElementById(`bf_${family.family_id}`).value || DEFAULT_MEAL_TIMES.breakfast,
+          lunch:     document.getElementById(`lu_${family.family_id}`).value || DEFAULT_MEAL_TIMES.lunch,
+          dinner:    document.getElementById(`di_${family.family_id}`).value || DEFAULT_MEAL_TIMES.dinner
+        };
+        try{
+          await saveMealTimes(payload);
+          showSuccess('Meal times saved.');
+        }catch(e){
+          console.error(e);
+          showError(e.message || 'Failed to save meal times.');
+        }
+      });
+    }
+    if (resetBtn){
+      resetBtn.addEventListener('click', ()=>{ resetMealTimesToDefaults(family.family_id); });
+    }
+  }
+
+async function saveMealTimes({ family_id, breakfast, lunch, dinner }) {
+  const url = `${API_BASE}/family/${family_id}/meal-times`; // KHÔNG có slash cuối
+  const body = { breakfast, lunch, dinner };                 // đúng model FamilyMealTimes
+  await fetchJSON(url, {
+    method: 'PUT',
+    body: JSON.stringify(body)
+  });
+}
+
+  function resetMealTimesToDefaults(familyId){
+    const bf = document.getElementById(`bf_${familyId}`);
+    const lu = document.getElementById(`lu_${familyId}`);
+    const di = document.getElementById(`di_${familyId}`);
+    if (bf) bf.value = DEFAULT_MEAL_TIMES.breakfast;
+    if (lu) lu.value = DEFAULT_MEAL_TIMES.lunch;
+    if (di) di.value = DEFAULT_MEAL_TIMES.dinner;
+  }
+</script>
+</body>
+</html>

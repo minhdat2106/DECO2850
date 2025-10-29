@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .pencil-icon {
+            position: absolute;
+            right: 12px;
+            color: #6b7280;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .input-group:hover .pencil-icon {
+            opacity: 1;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .hidden {
+            display: none;
+        }
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .success-message {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-item {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-2xl mx-auto px-4">
+            <!-- User Info Header -->
+            <div class="flex justify-between items-center mb-6 fade-in">
+                <div></div>
+                <div class="relative">
+                    <button id="userProfileBtn" class="flex items-center space-x-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-3 hover:bg-opacity-30 transition-all">
+                        <div class="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
+                            <span id="userInitial" class="text-lg font-bold text-white">U</span>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-white font-semibold" id="userName">User</div>
+                            <div class="text-blue-100 text-xs" id="userRole">Member</div>
+                        </div>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- User Dropdown -->
+                    <div id="userDropdown" class="dropdown-content">
+                        <a href="edit_profile.html" class="dropdown-item">
+                            <span class="mr-2">✏️</span>Edit Profile
+                        </a>
+                        <a href="manage_family.html" class="dropdown-item">
+                            <span class="mr-2">👨‍👩‍👧‍👦</span>Manage My Family
+                        </a>
+                        <a href="messages.html" class="dropdown-item">
+                            <span class="mr-2">💬</span>Messages
+                            <span id="messageCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                        </a>
+                        <hr class="my-1">
+                        <a href="#" id="logoutBtn" class="dropdown-item text-red-600">
+                            <span class="mr-2">🚪</span>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">✏️ Edit Profile</h1>
+                <p class="text-xl text-blue-100">Update your personal information</p>
+            </div>
+
+            <!-- Profile Form -->
+            <div class="form-section fade-in">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label class="form-label">User ID</label>
+                        <div class="input-group">
+                            <input type="text" id="userId" class="form-input" readonly>
+                            <span class="pencil-icon" title="User ID cannot be changed" style="opacity: 0.3; cursor: not-allowed;">✏️</span>
+                        </div>
+                        <small class="text-gray-500">User ID cannot be changed</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Display Name</label>
+                        <div class="input-group">
+                            <input type="text" id="userName" class="form-input" required>
+                            <span class="pencil-icon" title="Click to edit" id="userNamePencil">✏️</span>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div id="errorMessage" class="error-message hidden">
+                        <span id="errorText"></span>
+                    </div>
+
+                    <div id="successMessage" class="success-message hidden">
+                        <span id="successText"></span>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex space-x-4">
+                        <button type="submit" class="btn btn-primary">
+                            Save Changes
+                        </button>
+                        <button type="button" id="backBtn" class="btn btn-secondary">
+                            Back to Home
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- User Statistics -->
+            <div class="form-section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Your Statistics</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-blue-600" id="familyCount">0</div>
+                        <div class="text-gray-600">Families Joined</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-green-600" id="submissionCount">0</div>
+                        <div class="text-gray-600">Submissions Made</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-purple-600" id="planCount">0</div>
+                        <div class="text-gray-600">Plans Generated</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        
+        let currentUser = null;
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            // Use auth.js for proper authentication
+            initAuth(
+                (user) => {
+                    currentUser = user;
+                    updateUserInfo();
+                    loadUserProfile();
+                    loadUserStats();
+                    setupEventListeners();
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Update user information display
+        function updateUserInfo() {
+            if (currentUser) {
+                const userNameEl = document.getElementById('userName');
+                const userInitialEl = document.getElementById('userInitial');
+                if (userNameEl) userNameEl.textContent = currentUser.user_name;
+                if (userInitialEl) userInitialEl.textContent = currentUser.user_name.charAt(0).toUpperCase();
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/user/${currentUser.user_id}`);
+                if (response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('userId').value = userData.user_id;
+                    document.getElementById('userName').value = userData.user_name;
+                } else {
+                    showError('Failed to load user profile.');
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                showError('Error loading user profile. Please try again.');
+            }
+        }
+
+        // Load user statistics
+        async function loadUserStats() {
+            try {
+                // Load family count
+                const familiesResponse = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+                if (familiesResponse.ok) {
+                    const families = await familiesResponse.json();
+                    document.getElementById('familyCount').textContent = families.length;
+                }
+
+                // Load submission count
+                const submissionsResponse = await fetch(`${API_BASE}/submissions/my?family_id=all&user_id=${currentUser.user_id}&limit=100`);
+                if (submissionsResponse.ok) {
+                    const submissions = await submissionsResponse.json();
+                    document.getElementById('submissionCount').textContent = submissions.length;
+                }
+
+                // Load plan count
+                const plansResponse = await fetch(`${API_BASE}/plans?family_id=all`);
+                if (plansResponse.ok) {
+                    const plans = await plansResponse.json();
+                    document.getElementById('planCount').textContent = plans.length;
+                }
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Form submission
+            document.getElementById('profileForm').addEventListener('submit', handleSubmit);
+            
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+
+            // User dropdown
+            const userProfileBtn = document.getElementById('userProfileBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (userProfileBtn && userDropdown) {
+                userProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userProfileBtn.contains(e.target)) {
+                        userDropdown.classList.remove('show');
+                    }
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+
+            // Pencil icon click handlers
+            document.getElementById('userNamePencil').addEventListener('click', (e) => {
+                const input = document.getElementById('userName');
+                input.focus();
+                input.select();
+            });
+
+            // Input change handlers
+            document.getElementById('userName').addEventListener('input', () => {
+                // Enable save button when changes are made
+                const saveBtn = document.querySelector('button[type="submit"]');
+                saveBtn.disabled = false;
+            });
+        }
+
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const userName = document.getElementById('userName').value.trim();
+            
+            if (!userName) {
+                showError('Please enter a display name.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/user/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser.user_id,
+                        user_name: userName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update current user data
+                    currentUser.user_name = userName;
+                    
+                    // Update sessionStorage with tab-specific key
+                    const tabKey = getTabKey('currentUser');
+                    sessionStorage.setItem(tabKey, JSON.stringify(currentUser));
+                    
+                    showSuccess('Profile updated successfully!');
+                    
+                    // Refresh page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showError(data.detail || 'Failed to update profile. Please try again.');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showError('Network error. Please check your connection and try again.');
+            }
+        }
+
+        // Show/hide messages
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+
+        function showError(message) {
+            hideMessages();
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+
+        function showSuccess(message) {
+            hideMessages();
+            document.getElementById('successText').textContent = message;
+            document.getElementById('successMessage').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

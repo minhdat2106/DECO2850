@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Meal Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- React UMD + Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+<div id="root"></div>
+
+<script type="text/babel">
+/* ---------- Config ---------- */
+const API_BASE = 'http://localhost:8000';
+const PAGES = { FAMILY_AUTH:0, USER_AUTH:1, USER_HOME:2, FAMILY_ADMIN:3, PLAN_VIEW:4, INFO_COLLECT:5 };
+
+/* ---------- Helpers ---------- */
+async function fetchJSON(url, opts={}) {
+  const r = await fetch(url, opts);
+  let data = null;
+  try { data = await r.json(); } catch(e){ /* ignore */ }
+  if(!r.ok) {
+    const msg = (data && (data.detail || data.error)) || `HTTP ${r.status}`;
+    throw new Error(msg);
+  }
+  return data || {};
+}
+
+function Card({children, className=""}) {
+  return <div className={"bg-white border rounded-xl p-4 "+className}>{children}</div>;
+}
+
+function SectionTitle({children}) {
+  return <h2 className="text-xl font-bold mb-2">{children}</h2>;
+}
+
+/* ---------- Page 1: Family Sign in / Register ---------- */
+function FamilyAuth({onOk}) {
+  const [fid,setFid] = React.useState('');
+  const [fname,setFname] = React.useState('');
+  const [fpw,setFpw] = React.useState('');
+  const idOk = /^[A-Za-z0-9]+$/.test(fid);
+  const pwOk = /^[A-Za-z0-9]+$/.test(fpw);
+
+  const login = async () => {
+    if(!idOk || !pwOk) return alert('Family ID & password must be alphanumeric.');
+    try {
+      const d = await fetchJSON(`${API_BASE}/api/family/login`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({family_id: fid, family_password: fpw})
+      });
+      onOk({family_id: d.family_id, family_name: d.family_name});
+    } catch(e){ alert(`Login failed: ${e.message}`); }
+  };
+
+  const register = async () => {
+    if(!idOk || !pwOk || !fname) return alert('Please fill all fields. ID & password must be alphanumeric.');
+    if(!confirm('Confirm password?')) return;
+    try {
+      await fetchJSON(`${API_BASE}/api/family/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({family_id: fid, family_name: fname, family_password: fpw})
+      });
+      alert('Registered. Please login.');
+      setFid(''); setFname(''); setFpw('');
+    } catch(e){ alert(`Register failed: ${e.message}`); }
+  };
+
+  return (
+    <div className="max-w-md mx-auto py-8">
+      <SectionTitle>Family Sign in</SectionTitle>
+      <Card>
+        <label className="block text-sm text-gray-600 mb-1">Family ID</label>
+        <input className="w-full border rounded-lg p-2 mb-3" value={fid} onChange={e=>setFid(e.target.value)} placeholder="e.g. BaiFamily" />
+        <label className="block text-sm text-gray-600 mb-1">Family Name (for registration)</label>
+        <input className="w-full border rounded-lg p-2 mb-3" value={fname} onChange={e=>setFname(e.target.value)} placeholder="e.g. Bai Home" />
+        <label className="block text-sm text-gray-600 mb-1">Family Password</label>
+        <input className="w-full border rounded-lg p-2 mb-3" type="password" value={fpw} onChange={e=>setFpw(e.target.value)} placeholder="letters & numbers" />
+        <div className="flex gap-2">
+          <button className="px-4 py-2 rounded-lg bg-blue-600 text-white" onClick={login}>Sign in</button>
+          <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={register}>Register</button>
+        </div>
+        <p className="text-xs text-gray-500 mt-3">Forgot password? Ask family admin.</p>
+      </Card>
+    </div>
+  );
+}
+
+/* ---------- Page 2: User Sign in / Register ---------- */
+function UserAuth({family, onOk}) {
+  const [uid,setUid] = React.useState('');
+  const [uname,setUname] = React.useState('');
+  const [upw,setUpw] = React.useState('');
+  const idOk=/^[A-Za-z0-9]+$/.test(uid), pwOk=/^[A-Za-z0-9]+$/.test(upw);
+
+  const login = async ()=>{
+    if(!idOk||!pwOk) return alert('User ID & password must be alphanumeric.');
+    try{
+      const d = await fetchJSON(`${API_BASE}/api/user/login`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id: uid, user_pass: upw})
+      });
+      onOk({user_id:d.user_id, user_name:d.user_name});
+    }catch(e){ alert(`Login failed: ${e.message}`); }
+  };
+  const register = async ()=>{
+    if(!idOk||!pwOk||!uname) return alert('Please fill ID, User Name and Password.');
+    if(!confirm('Confirm password?')) return;
+    try{
+      await fetchJSON(`${API_BASE}/api/user/register`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({user_id: uid, user_name: uname, user_pass: upw})
+      });
+      alert('Registered. Please login.');
+      setUid(''); setUname(''); setUpw('');
+    }catch(e){ alert(`Register failed: ${e.message}`); }
+  };
+
+  return (
+    <div className="max-w-md mx-auto py-8">
+      <SectionTitle>User Sign in</SectionTitle>
+      <Card>
+        <div className="text-sm text-gray-600 mb-3">
+          Current Family: <span className="font-semibold">{family.family_id}</span> · {family.family_name}
+        </div>
+        <label className="block text-sm text-gray-600 mb-1">User ID</label>
+        <input className="w-full border rounded-lg p-2 mb-3" value={uid} onChange={e=>setUid(e.target.value)} />
+        <label className="block text-sm text-gray-600 mb-1">User Name (for registration)</label>
+        <input className="w-full border rounded-lg p-2 mb-3" value={uname} onChange={e=>setUname(e.target.value)} />
+        <label className="block text-sm text-gray-600 mb-1">Password</label>
+        <input className="w-full border rounded-lg p-2 mb-3" type="password" value={upw} onChange={e=>setUpw(e.target.value)} />
+        <div className="flex gap-2">
+          <button className="px-4 py-2 rounded-lg bg-blue-600 text-white" onClick={login}>Sign in</button>
+          <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={register}>Register</button>
+        </div>
+        <p className="text-xs text-gray-500 mt-3">Forgot password? Ask family admin.</p>
+      </Card>
+    </div>
+  );
+}
+
+/* ---------- First join: Choose Role (modal) ---------- */
+function RolePicker({open, onClose, familyId, userId, existing, onDone}) {
+  const [role,setRole] = React.useState('Son');
+  const [displayName,setDisplayName] = React.useState('');
+  if(!open) return null;
+  const hasFather = existing.some(m=>m.role==='Father');
+  const hasMother = existing.some(m=>m.role==='Mother');
+
+  const save = async ()=>{
+    if(!displayName) return alert('Display name required.');
+    try{
+      await fetchJSON(`${API_BASE}/api/family/join`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({family_id: familyId, user_id: userId, role, display_name: displayName})
+      });
+      onDone({role, display_name: displayName});
+      onClose();
+    }catch(e){ alert(`Failed: ${e.message}`); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-4 w-full max-w-md">
+        <SectionTitle>Choose Your Role</SectionTitle>
+        <div className="mb-2 text-sm text-gray-600">Each family can only have one Father and one Mother.</div>
+        <select className="w-full border rounded-lg p-2 mb-3" value={role} onChange={e=>setRole(e.target.value)}>
+          <option disabled={hasFather} value="Father">Father</option>
+          <option disabled={hasMother} value="Mother">Mother</option>
+          <option value="Grandpa">Grandpa</option>
+          <option value="Grandma">Grandma</option>
+          <option value="Son">Son</option>
+          <option value="Daughter">Daughter</option>
+          <option value="Friend">Friend</option>
+        </select>
+        <input className="w-full border rounded-lg p-2 mb-3" placeholder="Display name"
+               value={displayName} onChange={e=>setDisplayName(e.target.value)} />
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-2 rounded-lg border">Cancel</button>
+          <button onClick={save} className="px-3 py-2 rounded-lg bg-emerald-600 text-white">Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Page 3: User Home ---------- */
+function UserHome({family, user, membership, isPrimary, onGotoInfo, onGotoPlans, onGotoAdmin}) {
+  const role = membership?.role;
+  return (
+    <div className="max-w-xl mx-auto py-8">
+      <Card>
+        <SectionTitle>Welcome, {user.user_name}</SectionTitle>
+        <div className="text-sm text-gray-600 mb-4">
+          Family: <b>{family.family_name}</b> ({family.family_id}),{" "}
+          Role: <b>{role || 'Not set'}</b>,{" "}
+          Primary: <b>{isPrimary ? 'Yes' : 'No'}</b>
+        </div>
+        <div className="flex flex-col md:flex-row gap-3">
+          <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={onGotoInfo}>New Plan</button>
+          <button className="px-4 py-2 rounded-lg bg-blue-600 text-white" onClick={onGotoPlans}>View Plans</button>
+          {(role === 'Father' || role === 'Mother') &&
+            <button className="px-4 py-2 rounded-lg bg-violet-600 text-white" onClick={onGotoAdmin}>Family Admin</button>}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ---------- Page 4: Family Admin (Father/Mother) ---------- */
+/* ---------- Row component for each member ---------- */
+function MemberRow({ m, onSave, onSetPrimary }) {
+  // Local editable states per row
+  const [name, setName] = React.useState(m.user_name);
+  const [pass, setPass] = React.useState(m.user_pass);
+  const [role, setRole] = React.useState(m.role);
+
+  const roleOptions = ['Father','Mother','Grandpa','Grandma','Son','Daughter','Friend'];
+  const isFriend = role === 'Friend';
+
+  return (
+    <tr className="border-t">
+      <td className="p-2">
+        <select
+          className="border rounded p-1"
+          value={role}
+          onChange={e => setRole(e.target.value)}
+        >
+          {roleOptions.map(v => <option key={v} value={v}>{v}</option>)}
+        </select>
+      </td>
+      <td className="p-2">{m.user_id}</td>
+      <td className="p-2">
+        <input
+          className="border rounded p-1"
+          value={name}
+          onChange={e => setName(e.target.value)}
+        />
+      </td>
+      <td className="p-2">
+        <input
+          className="border rounded p-1"
+          value={pass}
+          onChange={e => setPass(e.target.value)}
+          disabled={isFriend}                 /* Friends' password not editable */
+          placeholder={isFriend ? '******' : ''}
+        />
+      </td>
+      <td className="p-2">{m.is_primary_today ? '✅' : ''}</td>
+      <td className="p-2 flex gap-2">
+        <button
+          className="px-2 py-1 rounded bg-emerald-600 text-white"
+          onClick={() => onSave({ ...m, user_name: name, user_pass: pass, role })}
+          title="Save changes to this member"
+        >
+          Save
+        </button>
+        <button
+          className="px-2 py-1 rounded bg-blue-600 text-white"
+          onClick={() => onSetPrimary(m.user_id)}
+          title="Set this member as today's primary"
+        >
+          Set Primary Today
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+/* ---------- Page 4: Family Admin (Father/Mother) ---------- */
+function FamilyAdmin({ family, currentUserId, onBack }) {
+  const [members, setMembers] = React.useState([]);
+  const [familyName, setFamilyName] = React.useState(family.family_name);
+  const [familyPw, setFamilyPw] = React.useState('');
+
+  const API_BASE = 'http://localhost:8000';
+
+  const fetchJSON = async (url, opts = {}) => {
+    const r = await fetch(url, opts);
+    let data = null;
+    try { data = await r.json(); } catch (e) { /* ignore */ }
+    if (!r.ok) {
+      const msg = (data && (data.detail || data.error)) || `HTTP ${r.status}`;
+      throw new Error(msg);
+    }
+    return data || {};
+  };
+
+  const load = React.useCallback(async () => {
+    const rows = await fetchJSON(`${API_BASE}/api/family/members?family_id=${family.family_id}`);
+    setMembers(rows || []);
+  }, [family.family_id]);
+
+  React.useEffect(() => { load(); }, [load]);
+
+  const setPrimary = async (user_id) => {
+    try {
+      await fetchJSON(
+        `${API_BASE}/api/family/set_primary_today?family_id=${family.family_id}&user_id=${user_id}&is_primary=true`,
+        { method: 'POST' }
+      );
+      await load();
+      alert('Primary set.');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const saveMember = async (m) => {
+    if (m.role === 'Friend') {
+      alert('Not allowed: cannot modify password for Friend.');
+      // you may still allow name/role update; enforce backend rules as needed
+    }
+    try {
+      await fetchJSON(`${API_BASE}/api/family/members/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          family_id: family.family_id,
+          user_id: m.user_id,
+          user_name: m.user_name,
+          user_pass: m.user_pass,
+          role: m.role
+        })
+      });
+      await load();
+      alert('Updated');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const saveFamily = async () => {
+    if (!familyPw) return alert('Enter a new family password');
+    try {
+      await fetchJSON(`${API_BASE}/api/family/profile/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          family_id: family.family_id,
+          family_name: familyName,
+          family_password: familyPw
+        })
+      });
+      alert('Family updated');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="mb-4">
+        <button onClick={onBack} className="text-blue-600 underline">&larr; Back</button>
+      </div>
+
+      <div className="bg-white border rounded-xl p-4 mb-6">
+        <h2 className="text-xl font-bold mb-2">Family Profile</h2>
+        <div className="grid md:grid-cols-3 gap-3">
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Family ID (read-only)</div>
+            <input className="w-full border rounded-lg p-2" value={family.family_id} readOnly />
+          </div>
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Family Name</div>
+            <input
+              className="w-full border rounded-lg p-2"
+              value={familyName}
+              onChange={e => setFamilyName(e.target.value)}
+            />
+          </div>
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Family Password (new)</div>
+            <input
+              className="w-full border rounded-lg p-2"
+              type="password"
+              value={familyPw}
+              onChange={e => setFamilyPw(e.target.value)}
+            />
+          </div>
+        </div>
+        <button
+          className="mt-3 px-4 py-2 rounded-lg bg-emerald-600 text-white"
+          onClick={saveFamily}
+        >
+          Save
+        </button>
+      </div>
+
+      <div className="bg-white border rounded-xl p-4">
+        <h2 className="text-xl font-bold mb-2">Members</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-600">
+                <th className="p-2">Role</th>
+                <th className="p-2">User ID</th>
+                <th className="p-2">User Name</th>
+                <th className="p-2">Password</th>
+                <th className="p-2">Primary (today)</th>
+                <th className="p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {members.map((m, idx) => (
+                <MemberRow
+                  key={m.user_id || idx}
+                  m={m}
+                  onSave={saveMember}
+                  onSetPrimary={setPrimary}
+                />
+              ))}
+              {members.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-3 text-gray-500">
+                    No members yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Dashboard: Family Wheel (weighted picker) ---------- */
+function WheelSection({ family, user }) {
+  const canvasRef = React.useRef(null);
+  const [dinnerTime, setDinnerTime] = React.useState(() => {
+    const now = new Date(); now.setMinutes(0,0,0);
+    return now.toISOString().slice(0,16); // yyyy-MM-ddTHH:mm
+  });
+
+  const [ballotsLeft, setBallotsLeft] = React.useState(0);
+  const [dishes, setDishes] = React.useState([]);
+  const [newDish, setNewDish] = React.useState('');
+  const [spinning, setSpinning] = React.useState(false);
+  const [resultText, setResultText] = React.useState('');
+
+  const dtISO = () => dinnerTime.replace('T',' ') + ':00';
+  const color = i => {
+    const hues = [0,24,48,90,140,190,220,260,300,330];
+    return `hsl(${hues[i%hues.length]} 70% 55%)`;
+  };
+
+  const loadState = React.useCallback(async ()=>{
+    const url = `${API_BASE}/api/wheel/state?family_id=${encodeURIComponent(family.family_id)}&dinner_time=${encodeURIComponent(dtISO())}&user_id=${encodeURIComponent(user.user_id)}`;
+    const data = await fetchJSON(url);
+
+    const total = (data.dishes||[]).reduce((s,d)=> s + Math.max(1, d.votes||0), 0) || 1;
+    let acc = 0;
+    const items = (data.dishes||[]).map((d,idx)=>{
+      const w = Math.max(1, d.votes||0);
+      const start = acc/total*2*Math.PI; acc+=w;
+      const end = acc/total*2*Math.PI;
+      return {...d, weight:w, start, end, color: color(idx)};
+    });
+    setBallotsLeft(data.ballots_left ?? 0);
+    setDishes(items);
+    drawWheel(items, 0);
+  }, [family.family_id, user.user_id, dinnerTime]);
+
+  React.useEffect(()=>{ loadState(); }, [loadState]);
+
+  function drawWheel(list, angle){
+    const cvs = canvasRef.current; if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const R = cvs.width/2;
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    ctx.save(); ctx.translate(R,R); ctx.rotate(angle||0);
+
+    list.forEach(d=>{
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.arc(0,0,R, d.start, d.end); ctx.closePath();
+      ctx.fillStyle = d.color; ctx.fill(); ctx.stroke();
+
+      const mid=(d.start+d.end)/2;
+      ctx.save(); ctx.rotate(mid); ctx.translate(R*0.62,0); ctx.rotate(Math.PI/2);
+      ctx.fillStyle="#fff"; ctx.font="bold 12px system-ui, sans-serif";
+      const txt = (d.name||'').slice(0,18);
+      ctx.fillText(txt, -ctx.measureText(txt).width/2, 0);
+      ctx.restore();
+    });
+
+    ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(R, R-10); ctx.lineTo(R+22, R); ctx.lineTo(R, R+10);
+    ctx.closePath(); ctx.fillStyle="#111"; ctx.fill();
+  }
+
+  function pickWinner(list){
+    const S = list.reduce((s,d)=> s + d.weight, 0);
+    let r = Math.random()*S, acc=0, win=list[0];
+    for(const d of list){ acc+=d.weight; if(r<=acc){ win=d; break; } }
+    const mid = (win.start + win.end)/2;
+    const k = 6 + Math.floor(Math.random()*3);
+    const target = k*2*Math.PI - mid;
+    return {win, target};
+  }
+  const easeOut = t => 1 - Math.pow(1-t, 3);
+
+  async function onRoll(){
+    if(spinning || dishes.length===0) return;
+    setResultText('');
+    const {win, target} = pickWinner(dishes);
+    setSpinning(true);
+    const start = performance.now(); const dur = 3000; const startAngle = 0;
+    const step = (ts)=>{
+      const t = Math.min(1, (ts-start)/dur);
+      const a = startAngle + (1-Math.pow(1-t,3))*target;
+      drawWheel(dishes, a);
+      if(t<1 && spinning) requestAnimationFrame(step);
+      else { setSpinning(false); setResultText(`Picked: ${win.name} (by ${win.proposer})`); }
+    };
+    requestAnimationFrame(step);
+  }
+
+  async function onVote(d){
+    try{
+      await fetchJSON(`${API_BASE}/api/wheel/vote`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          family_id: family.family_id,
+          dinner_time: dtISO(),
+          dish_id: d.id,
+          voter_id: user.user_id
+        })
+      });
+      await loadState();
+    }catch(e){ alert(e.message || 'Vote failed'); }
+  }
+
+  async function onAdd() {
+    const name = (newDish || '').trim();
+    if (!name) {
+      alert('Please type a dish name');
+      return;
+    }
+
+    try {
+      const payload = {
+        family_id: family.family_id,
+        user_id: user.user_id,
+        dinner_time: dinnerTime.replace('T',' ') + ':00', // YYYY-MM-DD HH:MM:SS
+        dishes: [name],                                   // 1 món/lần
+      };
+      console.log('[wheel] add payload', payload);
+
+      const resp = await fetchJSON(`${API_BASE}/api/wheel/preferences/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[wheel] add response', resp);
+      setNewDish('');
+      await loadState();  // refresh danh sách + ballots
+    } catch (e) {
+      console.error('[wheel] add error', e);
+      alert(e.message || 'Add failed');
+    }
+  }
+
+
+
+  return (
+    <section className="bg-white border rounded-xl p-4 mt-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Family Wheel</h3>
+        <div className="text-xs text-gray-600 flex items-center gap-2">
+          Dinner time:
+          <input type="datetime-local" className="border rounded px-2 py-1"
+                 value={dinnerTime} onChange={e=>setDinnerTime(e.target.value)} />
+          <button className="px-2 py-1 rounded border" onClick={loadState}>Refresh</button>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mt-3">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div>Ballots left: <b>{ballotsLeft}</b></div>
+            <div className="text-xs text-gray-500">(you can’t vote for your own dish)</div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {dishes.map(d=>(
+              <div key={d.id} className="flex items-center justify-between border rounded-lg p-2">
+                <div>
+                  <div className="font-semibold">{d.name}</div>
+                  <div className="text-xs text-gray-600">by {d.proposer} · votes: {d.votes||0}</div>
+                </div>
+                <button
+                  className={`px-3 py-1 rounded text-white ${(!ballotsLeft || d.is_own) ? 'bg-gray-300' : 'bg-emerald-600'}`}
+                  disabled={!ballotsLeft || d.is_own}
+                  onClick={()=>onVote(d)}
+                >Vote</button>
+              </div>
+            ))}
+            {dishes.length===0 && <div className="text-sm text-gray-500">No dishes yet.</div>}
+          </div>
+
+          <div className="mt-3 border-t pt-3">
+            <div className="text-xs text-gray-600 mb-1">Add your dish (max 2 for this time)</div>
+            <div className="flex gap-2">
+              <input className="flex-1 border rounded px-2 py-1" placeholder="e.g., Beef pho"
+                     value={newDish} onChange={e=>setNewDish(e.target.value)} />
+              <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={onAdd}>Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <canvas ref={canvasRef} width="380" height="380" className="rounded-full shadow"/>
+          <div className="mt-2 flex gap-2 justify-center">
+            <button className={`px-4 py-2 rounded text-white ${spinning?'bg-gray-300':'bg-indigo-600'}`}
+                    disabled={spinning || dishes.length===0} onClick={onRoll}>Roll</button>
+            <button className="px-4 py-2 rounded border"
+                    onClick={()=>{ setSpinning(false); drawWheel(dishes, 0); }}>Stop</button>
+          </div>
+          <div className="mt-2 font-semibold">{resultText}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Page 5: Plan List / View / Delete / Regenerate ---------- */
+function PlanView({family, onBack}) {
+  const [list,setList] = React.useState([]);
+  const [current,setCurrent] = React.useState(null);
+  const [html,setHtml] = React.useState('');
+  const [feedback,setFeedback] = React.useState('');
+
+  const loadList = async ()=>{
+    const rows = await fetchJSON(`${API_BASE}/api/plans?family_id=${family.family_id}`);
+    setList(rows || []);
+  };
+  React.useEffect(()=>{ loadList(); }, []);
+
+  const loadOne = async (id)=>{
+    const d = await fetchJSON(`${API_BASE}/api/plan/${id}`);
+    setCurrent(id); setHtml(d.plan_html || '');
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
+  const delOne = async (id)=>{
+    if(!confirm('Delete this plan?')) return;
+    await fetchJSON(`${API_BASE}/api/plan/${id}`, {method:'DELETE'});
+    if(current===id){ setCurrent(null); setHtml(''); }
+    await loadList();
+  };
+  const regen = async ()=>{
+    if(!feedback) return alert('Enter feedback');
+    const d = await fetchJSON(`${API_BASE}/api/plan/${current}/regenerate`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ feedback })
+    });
+    alert('Regenerated');
+    setFeedback('');
+    await loadList();
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-8">
+      <div className="mb-4"><button onClick={onBack} className="text-blue-600 underline">&larr; Back</button></div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card>
+          <SectionTitle>Plans</SectionTitle>
+          <ul className="divide-y">
+            {list.map(p=>(
+              <li key={p.id} className="py-2 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">{p.plan_code}</div>
+                  <div className="text-xs text-gray-600">{new Date(p.created_at).toLocaleString()} · {new Date(p.dinner_time).toLocaleString()}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-2 py-1 rounded bg-blue-600 text-white" onClick={()=>loadOne(p.id)}>View</button>
+                  <button className="px-2 py-1 rounded bg-rose-600 text-white" onClick={()=>delOne(p.id)}>Delete</button>
+                </div>
+              </li>
+            ))}
+            {list.length===0 && <li className="text-sm text-gray-500 py-2">No plans.</li>}
+          </ul>
+        </Card>
+        <Card>
+          <SectionTitle>Regenerate</SectionTitle>
+          <textarea className="w-full border rounded-lg p-2" rows="6" placeholder="e.g., add more vegetables, reduce fried dishes, make it gluten-free..." value={feedback} onChange={e=>setFeedback(e.target.value)} />
+          <button className="mt-3 px-4 py-2 rounded-lg bg-emerald-600 text-white" disabled={!current} onClick={regen}>Regenerate from feedback</button>
+          {!current && <p className="text-xs text-gray-500 mt-2">Pick a plan first.</p>}
+        </Card>
+      </div>
+
+      {html && <div className="mt-6"><Card><div dangerouslySetInnerHTML={{__html: html}}/></Card></div>}
+    </div>
+  );
+}
+
+/* ---------- Page 6: Info Collect / Generate ---------- */
+function InfoCollect({family, user, membership, isPrimary, onBack}) {
+  const [age,setAge] = React.useState('');
+  const [dinnerTime,setDinnerTime] = React.useState(()=>{
+    const now = new Date(); now.setMinutes(0,0,0);
+    return now.toISOString().slice(0,16); // YYYY-MM-DDTHH:00
+  });
+
+  // Controls
+  const [isChef,setIsChef] = React.useState(false);
+  const [wantsPrimary,setWantsPrimary] = React.useState(isPrimary);
+  const [headcount,setHeadcount] = React.useState(''); // empty -> use number of submissions
+
+  // Preferences & remarks
+  const [likesCuisines,setLikesCuisines] = React.useState('');
+  const [likesMethods,setLikesMethods] = React.useState('');
+  const [likesIngredients,setLikesIngredients] = React.useState('');
+  const [dislikeTastes,setDislikeTastes] = React.useState('');
+  const [dislikeIngredients,setDislikeIngredients] = React.useState('');
+  const [allergies,setAllergies] = React.useState('');
+  const [religion,setReligion] = React.useState('');
+  const [health,setHealth] = React.useState('');
+  const [drinks,setDrinks] = React.useState('');
+  const [other,setOther] = React.useState('');
+  const [remark,setRemark] = React.useState('');
+  const role = membership?.role;
+  const displayName = membership?.display_name || user.user_name;
+
+  // Toggle primary for today
+  const togglePrimary = async (checked)=>{
+    setWantsPrimary(checked);
+    try{
+      await fetchJSON(`${API_BASE}/api/family/set_primary_today?family_id=${family.family_id}&user_id=${user.user_id}&is_primary=${checked}`, {method:'POST'});
+    }catch(e){
+      alert(`Failed to set primary: ${e.message}`);
+      setWantsPrimary(!checked); // rollback
+    }
+  };
+
+  const submit = async ()=>{
+    const prefs = {
+      likes: { cuisines: likesCuisines.split(',').map(s=>s.trim()).filter(Boolean),
+               methods: likesMethods.split(',').map(s=>s.trim()).filter(Boolean),
+               ingredients: likesIngredients.split(',').map(s=>s.trim()).filter(Boolean) },
+      dislikes: { tastes: dislikeTastes.split(',').map(s=>s.trim()).filter(Boolean),
+                  ingredients: dislikeIngredients.split(',').map(s=>s.trim()).filter(Boolean) },
+      restrictions: { allergies: allergies.split(',').map(s=>s.trim()).filter(Boolean),
+                      religion: religion.split(',').map(s=>s.trim()).filter(Boolean),
+                      health: health.split(',').map(s=>s.trim()).filter(Boolean) },
+      drinks: drinks.split(',').map(s=>s.trim()).filter(Boolean),
+      other,
+      is_chef: isChef
+    };
+    const payload = {
+      family_id: family.family_id, user_id: user.user_id,
+      role, display_name: displayName, age: age? Number(age): null,
+      dinner_time: dinnerTime.replace('T',' ') + ':00',
+      preferences: prefs, remark
+    };
+    try{
+      await fetchJSON(`${API_BASE}/api/info/submit`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+      });
+      alert('Submitted.');
+    }catch(e){ alert(e.message); }
+  };
+
+  const generate = async ()=>{
+    try{
+      const body = {
+        family_id: family.family_id,
+        dinner_time: dinnerTime.replace('T',' ') + ':00',
+      };
+      const n = Number(headcount);
+      if(Number.isFinite(n) && n > 0) body.headcount = n;  // override headcount
+      await fetchJSON(`${API_BASE}/api/plan/generate`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+      alert('Plan generated.');
+    }catch(e){
+      const msg = String(e.message);
+      if (msg.includes('未设置主要负责人')) {
+        alert('Generation failed: no "primary for today" has been set. Please tick "Set as today\'s primary" or set it in "Family Admin".');
+      } else if (msg.includes('无信息提交')) {
+        alert('Generation failed: there are no submissions for that dinner time. Please click "Submit" first, then generate.');
+      } else {
+        alert(`Generation failed: ${e.message}`);
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto py-8">
+      <div className="mb-4"><button onClick={onBack} className="text-blue-600 underline">&larr; Back</button></div>
+      <Card>
+        <SectionTitle>Info Collect</SectionTitle>
+
+        {/* Readonly info */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div><div className="text-sm text-gray-600 mb-1">Family ID (read-only)</div>
+            <input className="w-full border rounded-lg p-2" readOnly value={family.family_id}/></div>
+          <div><div className="text-sm text-gray-600 mb-1">Family Name (read-only)</div>
+            <input className="w-full border rounded-lg p-2" readOnly value={family.family_name}/></div>
+          <div><div className="text-sm text-gray-600 mb-1">My Role (read-only)</div>
+            <input className="w-full border rounded-lg p-2" readOnly value={role || ''}/></div>
+          <div><div className="text-sm text-gray-600 mb-1">Display Name (read-only)</div>
+            <input className="w-full border rounded-lg p-2" readOnly value={displayName}/></div>
+        </div>
+
+        {/* Time / headcount */}
+        <div className="grid md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Age (optional)</div>
+            <input className="w-full border rounded-lg p-2" type="number" min="0"
+                   value={age} onChange={e=>setAge(e.target.value)}/>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Dinner Time (hourly)</div>
+            <input className="w-full border rounded-lg p-2" type="datetime-local"
+                   value={dinnerTime} onChange={e=>setDinnerTime(e.target.value)}/>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600 mb-1">Headcount (optional)</div>
+            <input className="w-full border rounded-lg p-2" type="number" min="1"
+                   placeholder="Leave empty to use # of submissions" value={headcount} onChange={e=>setHeadcount(e.target.value)} />
+          </div>
+        </div>
+
+        {/* Role-related options */}
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={isChef} onChange={e=>setIsChef(e.target.checked)} />
+            <span>I am the chef</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={wantsPrimary} onChange={e=>togglePrimary(e.target.checked)} />
+            <span>Set as today's primary (effective immediately)</span>
+          </label>
+        </div>
+
+        {/* Preferences */}
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <div className="font-semibold">Likes</div>
+            <input className="w-full border rounded-lg p-2 mt-1" placeholder="Cuisines (comma-separated)"
+                   value={likesCuisines} onChange={e=>setLikesCuisines(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Cooking methods (comma-separated)"
+                   value={likesMethods} onChange={e=>setLikesMethods(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Ingredients (comma-separated)"
+                   value={likesIngredients} onChange={e=>setLikesIngredients(e.target.value)} />
+          </div>
+          <div>
+            <div className="font-semibold">Dislikes / Restrictions</div>
+            <input className="w-full border rounded-lg p-2 mt-1" placeholder="Disliked tastes (comma-separated)"
+                   value={dislikeTastes} onChange={e=>setDislikeTastes(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Disliked ingredients (comma-separated)"
+                   value={dislikeIngredients} onChange={e=>setDislikeIngredients(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Allergies (comma-separated)"
+                   value={allergies} onChange={e=>setAllergies(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Religion (comma-separated)"
+                   value={religion} onChange={e=>setReligion(e.target.value)} />
+            <input className="w-full border rounded-lg p-2 mt-2" placeholder="Health restrictions (comma-separated)"
+                   value={health} onChange={e=>setHealth(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <div className="font-semibold">Drinks</div>
+            <input className="w-full border rounded-lg p-2 mt-1" placeholder="e.g., tea, coffee, juice"
+                   value={drinks} onChange={e=>setDrinks(e.target.value)} />
+          </div>
+          <div>
+            <div className="font-semibold">Others</div>
+            <input className="w-full border rounded-lg p-2 mt-1" placeholder="Free text"
+                   value={other} onChange={e=>setOther(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="font-semibold">Remark</div>
+          <textarea className="w-full border rounded-lg p-2 mt-1" rows="3"
+                    value={remark} onChange={e=>setRemark(e.target.value)} />
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <button className="px-4 py-2 rounded-lg bg-blue-600 text-white" onClick={submit}>Submit</button>
+          {wantsPrimary &&
+            <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white" onClick={generate}>
+              Generate Plan
+            </button>}
+        </div>
+        {!wantsPrimary && <p className="text-xs text-gray-500 mt-2">Hint: only today's primary can generate a plan. You can tick the checkbox above to set it.</p>}
+      </Card>
+    </div>
+  );
+}
+
+/* ---------- App Shell ---------- */
+function App(){
+  const [page,setPage] = React.useState(PAGES.FAMILY_AUTH);
+  const [family,setFamily] = React.useState(null); // {family_id, family_name}
+  const [user,setUser] = React.useState(null);     // {user_id, user_name}
+  const [membership,setMembership] = React.useState(null); // {role, display_name}
+  const [isPrimary,setIsPrimary] = React.useState(false);
+  const [rolePickerOpen,setRolePickerOpen] = React.useState(false);
+  const [membersCache,setMembersCache] = React.useState([]);
+
+  // Ensure membership before entering USER_HOME
+  const ensureMembership = async (f,u)=>{
+    const rows = await fetchJSON(`${API_BASE}/api/family/members?family_id=${f.family_id}`);
+    setMembersCache(rows);
+    const me = rows.find(m=>m.user_id===u.user_id);
+    if(!me){
+      setRolePickerOpen(true);
+    }else{
+      setMembership({role: me.role, display_name: me.display_name});
+      setIsPrimary(!!me.is_primary_today);
+    }
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto p-4">
+      {!family && page===PAGES.FAMILY_AUTH &&
+        <FamilyAuth onOk={(f)=>{ setFamily(f); setPage(PAGES.USER_AUTH); }}/>}
+      {family && !user && page===PAGES.USER_AUTH &&
+        <UserAuth family={family} onOk={(u)=>{ setUser(u); setPage(PAGES.USER_HOME); ensureMembership(family, u); }}/>}
+      {family && user && page===PAGES.USER_HOME &&
+        <>
+          <UserHome
+            family={family} user={user} membership={membership} isPrimary={isPrimary}
+            onGotoInfo={()=>setPage(PAGES.INFO_COLLECT)}
+            onGotoPlans={()=>setPage(PAGES.PLAN_VIEW)}
+            onGotoAdmin={()=>setPage(PAGES.FAMILY_ADMIN)}
+          />
+
+          <WheelSection family={family} user={user} />
+
+          <RolePicker
+            open={rolePickerOpen}
+            onClose={()=>setRolePickerOpen(false)}
+            familyId={family.family_id}
+            userId={user.user_id}
+            existing={membersCache}
+            onDone={(m)=>{ setMembership(m); }}
+          />
+        </>
+      }
+      {family && user && page===PAGES.FAMILY_ADMIN &&
+        <FamilyAdmin family={family} currentUserId={user.user_id} onBack={()=>setPage(PAGES.USER_HOME)} />}
+      {family && user && page===PAGES.PLAN_VIEW &&
+        <PlanView family={family} onBack={()=>setPage(PAGES.USER_HOME)} />}
+      {family && user && page===PAGES.INFO_COLLECT &&
+        <InfoCollect family={family} user={user} membership={membership} isPrimary={isPrimary} onBack={()=>setPage(PAGES.USER_HOME)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

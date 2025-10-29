@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Generate Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .meal-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .submission-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .hidden {
+            display: none;
+        }
+
+        /* Force English date format */
+        input[type="date"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+
+        input[type="datetime-local"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #3b82f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">📋 Generate Plan</h1>
+                <p class="text-xl text-blue-100">Create meal plans from family submissions</p>
+            </div>
+
+            <!-- Date Selector -->
+            <div class="meal-section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Select Date</h2>
+                <div class="flex items-center space-x-4">
+                    <input type="date" id="selectedDate" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" lang="en" data-format="YYYY-MM-DD">
+                    <button id="loadSubmissionsBtn" class="btn btn-primary">Load Submissions</button>
+                </div>
+            </div>
+
+            <!-- Submissions by Meal Type -->
+            <div id="submissionsContainer" class="hidden">
+                <!-- Breakfast Section -->
+                <div class="meal-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">🌅 Breakfast</h2>
+                    <div id="breakfastSubmissions" class="space-y-2">
+                        <!-- Breakfast submissions will be loaded here -->
+                    </div>
+                    <div class="mt-4">
+                        <button id="generateBreakfastBtn" class="btn btn-success" disabled>
+                            Generate Breakfast Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lunch Section -->
+                <div class="meal-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">☀️ Lunch</h2>
+                    <div id="lunchSubmissions" class="space-y-2">
+                        <!-- Lunch submissions will be loaded here -->
+                    </div>
+                    <div class="mt-4">
+                        <button id="generateLunchBtn" class="btn btn-success" disabled>
+                            Generate Lunch Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dinner Section -->
+                <div class="meal-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">🌙 Dinner</h2>
+                    <div id="dinnerSubmissions" class="space-y-2">
+                        <!-- Dinner submissions will be loaded here -->
+                    </div>
+                    <div class="mt-4">
+                        <button id="generateDinnerBtn" class="btn btn-success" disabled>
+                            Generate Dinner Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div id="progressContainer" class="meal-section hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Generating Plan...</h3>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="text-sm text-gray-600 mt-2">Preparing your meal plan...</p>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mt-8">
+                <button id="backBtn" class="btn btn-secondary">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+
+        let currentUser = null;
+        let selectedDate = null;
+        let submissions = [];
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            // đợi auth.js dò API xong
+            if (!window.API_BASE) await window.API_READY;
+            // Use auth.js for proper authentication
+            initAuth(
+                async (user) => {
+                    currentUser = user;
+                    setupEventListeners();
+                    setupDateInputs();
+
+                    // Set default date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('selectedDate').value = today;
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Setup date inputs to force English format
+        function setupDateInputs() {
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                // Set the input's locale to English
+                input.setAttribute('lang', 'en');
+                input.setAttribute('data-format', 'YYYY-MM-DD');
+
+                // Force English locale on the input
+                input.style.direction = 'ltr';
+                input.style.textAlign = 'left';
+
+                // Add event listener to format date on change
+                input.addEventListener('change', function() {
+                    if (this.value) {
+                        // Ensure the date is in YYYY-MM-DD format
+                        const date = new Date(this.value);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        this.value = `${year}-${month}-${day}`;
+                    }
+                });
+
+                // Force focus and blur to trigger locale change
+                input.addEventListener('focus', function() {
+                    this.setAttribute('lang', 'en');
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Load submissions button
+            document.getElementById('loadSubmissionsBtn').addEventListener('click', loadSubmissions);
+
+
+            // Generate plan buttons
+            document.getElementById('generateBreakfastBtn').addEventListener('click', () => generatePlan('breakfast'));
+            document.getElementById('generateLunchBtn').addEventListener('click', () => generatePlan('lunch'));
+            document.getElementById('generateDinnerBtn').addEventListener('click', () => generatePlan('dinner'));
+
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+        }
+
+
+        // Load submissions for selected date
+        async function loadSubmissions() {
+            await window.API_READY;
+            const BASE = window.API_BASE;
+
+            selectedDate = document.getElementById('selectedDate').value;
+            if (!selectedDate) {
+                alert('Please select a date');
+                return;
+            }
+
+            try {
+                // Get user's families and filter for holder families only
+                const familiesResponse = await fetch(`${BASE}/user/${encodeURIComponent(currentUser.user_id)}/families`, { cache: 'no-store' });
+                if (!familiesResponse.ok) {
+                    throw new Error('Failed to load families');
+                }
+
+                const families = await familiesResponse.json();
+                const holderFamilies = families.filter(f => f.role === 'holder');
+
+                if (holderFamilies.length === 0) {
+                    alert('You are not a holder of any families. Only family holders can generate meal plans.');
+                    return;
+                }
+
+                // Get submissions for holder families only
+                const allSubmissions = [];
+                let totalFamilies = holderFamilies.length;
+                let loadedFamilies = 0;
+
+                for (const family of holderFamilies) {
+                    const apiUrl = `${BASE}/submissions/family/${encodeURIComponent(family.family_id)}/at?meal_date=${encodeURIComponent(selectedDate)}`;
+
+                    try {
+                        const submissionsResponse = await fetch(apiUrl);
+
+                    if (submissionsResponse.ok) {
+                        const familySubmissions = await submissionsResponse.json();
+
+                            // Add family name and family_id to each submission
+                            familySubmissions.forEach(sub => {
+                                sub.family_name = family.family_name;
+                                sub.family_id = family.family_id;
+                            });
+                        allSubmissions.push(...familySubmissions);
+                        } else {
+                            const errorText = await submissionsResponse.text();
+                            console.error(`Failed to fetch submissions for family ${family.family_id}:`, errorText);
+                        }
+                    } catch (familyError) {
+                        console.error(`Error fetching submissions for family ${family.family_id}:`, familyError);
+                    }
+
+                    loadedFamilies++;
+                }
+
+                submissions = allSubmissions;
+
+                // Debug: Log loaded submissions
+                console.log('Loaded submissions:', allSubmissions);
+                console.log('Total submissions count:', allSubmissions.length);
+
+                // Debug: Check if family_id is present
+                allSubmissions.forEach((sub, index) => {
+                    if (!sub.family_id) {
+                        console.warn(`Submission ${index} missing family_id:`, sub);
+                    }
+                });
+
+                displaySubmissions();
+
+                // Show summary
+                if (allSubmissions.length === 0) {
+                    alert(`No submissions found for ${selectedDate}. Please check if family members have submitted their meal preferences for this date.`);
+                } else {
+                    console.log(`Successfully loaded ${allSubmissions.length} submissions for ${selectedDate}`);
+                }
+
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                alert('Error loading submissions. Please try again.');
+            }
+        }
+
+        async function getWheelWinner(familyId, mealDate, mealType) {
+            await window.API_READY;
+            const BASE = window.API_BASE;
+
+          try {
+            // 3.1) Gọi endpoint mới
+            const url = `${BASE}/wheel/picks/latest?family_id=${encodeURIComponent(familyId)}&meal_date=${encodeURIComponent(mealDate)}&meal_type=${encodeURIComponent(mealType)}`;
+            const r = await fetch(url);
+            if (r.ok) {
+              const d = await r.json();
+              if (d && (d.winner_name || d.winner)) {
+                return d.winner_name || d.winner;
+              }
+            }
+
+            // 3.2) Fallback cực kỳ nhẹ (nếu sau này bạn có thêm picked vào /wheel/state)
+            try {
+              const url2 = `${BASE}/wheel/state?family_id=${encodeURIComponent(familyId)}&meal_date=${encodeURIComponent(mealDate)}&meal_type=${encodeURIComponent(mealType)}`;
+              const r2 = await fetch(url2);
+              if (r2.ok) {
+                const s = await r2.json();
+                return s?.picked_name || s?.picked?.name || s?.picked || null;
+              }
+            } catch (_) {}
+
+            return null;
+          } catch (e) {
+            console.error('getWheelWinner error:', e);
+            return null;
+          }
+        }
+
+        // Display submissions by meal type
+        function displaySubmissions() {
+            const breakfastSubmissions = document.getElementById('breakfastSubmissions');
+            const lunchSubmissions = document.getElementById('lunchSubmissions');
+            const dinnerSubmissions = document.getElementById('dinnerSubmissions');
+
+            // Clear previous submissions
+            breakfastSubmissions.innerHTML = '';
+            lunchSubmissions.innerHTML = '';
+            dinnerSubmissions.innerHTML = '';
+
+            // Group submissions by meal type
+            const breakfast = [];
+            const lunch = [];
+            const dinner = [];
+
+            submissions.forEach(submission => {
+                const mealType = submission.meal_type ? submission.meal_type.toLowerCase() : '';
+
+                // 根据meal_type字段区分meal type
+                if (mealType === 'breakfast') {
+                    breakfast.push(submission);
+                } else if (mealType === 'lunch') {
+                    lunch.push(submission);
+                } else if (mealType === 'dinner') {
+                    dinner.push(submission);
+                }
+            });
+
+            // Display each meal type
+            displayMealSubmissions(breakfast, breakfastSubmissions, 'breakfast');
+            displayMealSubmissions(lunch, lunchSubmissions, 'lunch');
+            displayMealSubmissions(dinner, dinnerSubmissions, 'dinner');
+
+            // Show submissions container
+            document.getElementById('submissionsContainer').classList.remove('hidden');
+        }
+
+        // Display submissions for a specific meal type
+        function displayMealSubmissions(mealSubmissions, container, mealType) {
+            if (mealSubmissions.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic">No submissions for this meal time</p>';
+                return;
+            }
+
+            mealSubmissions.forEach(submission => {
+                const submissionDiv = document.createElement('div');
+                submissionDiv.className = 'submission-item';
+                submissionDiv.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-800">${submission.display_name || submission.user_id}</h4>
+                            <p class="text-sm text-gray-600">Family: ${submission.family_name || submission.family_id}</p>
+                            <p class="text-sm text-gray-600">Role: ${submission.role}</p>
+                            <p class="text-sm text-gray-500">Submitted: ${new Date(submission.created_at).toLocaleString()}</p>
+                            ${submission.remark ? `<p class="text-sm text-blue-600 mt-1">"${submission.remark}"</p>` : ''}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="btn btn-secondary text-xs" onclick="viewSubmissionDetails('${submission.id}')">
+                                Details
+                            </button>
+                            <button class="btn btn-danger text-xs" onclick="deleteSubmission('${submission.id}')">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(submissionDiv);
+            });
+
+            // Enable generate button if there are submissions
+            const generateBtn = document.getElementById(`generate${mealType.charAt(0).toUpperCase() + mealType.slice(1)}Btn`);
+            generateBtn.disabled = mealSubmissions.length === 0;
+        }
+
+        // Generate plan for specific meal type
+        async function generatePlan(mealType) {
+            await window.API_READY;
+            const BASE = window.API_BASE;
+
+            const mealSubmissions = getMealSubmissions(mealType);
+            if (mealSubmissions.length === 0) {
+                alert(`No submissions found for ${mealType}`);
+                return;
+            }
+
+            // Show progress bar (giữ nguyên behavior cũ)
+            document.getElementById('progressContainer').classList.remove('hidden');
+            simulateProgress();
+
+            try {
+                const familyId = mealSubmissions[0].family_id;
+                const headcount = mealSubmissions.reduce((acc, s) =>
+                  acc + (s.participant_count ?? s.Participant_Count ?? 1), 0
+                );
+
+                // 1) Lấy wheel winner làm anchor
+                const winner = await getWheelWinner(familyId, selectedDate, mealType);
+                const anchors = winner ? [winner] : [];
+
+                // 2) Chuẩn hoá submissions gửi backend (giữ code cũ)
+                const submissionData = mealSubmissions.map(sub => ({
+                    user_id: sub.user_id || '',
+                    role: sub.role || 'member',
+                    display_name: sub.display_name || sub.user_id || '',
+                    preferences: typeof sub.preferences === 'string' ? JSON.parse(sub.preferences) : (sub.preferences || {}),
+                    remark: sub.remark || '',
+                    drinks: sub.drinks || ''
+                }));
+
+                // 3) hard_lock: bạn có thể đặt mặc định true, hoặc đọc từ checkbox UI nếu bạn thêm
+                const hard_lock = true;
+
+                // 4) Gọi generate (THÊM anchors + hard_lock)
+                const response = await fetch(`${BASE}/plan/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        family_id: familyId,
+                        meal_date: selectedDate,
+                        meal_type: mealType,
+                        headcount,
+                        feedback: '',
+                        submissions: submissionData,
+                        anchors,       // <— NEW
+                        hard_lock      // <— NEW
+                    })
+                });
+
+                if (response.ok) {
+                    const planData = await response.json();
+
+                    // Nếu backend trả plan_id như cũ, điều hướng như trước:
+                    if (planData.plan_id) {
+                        window.location.href = `history.html?tab=plans&planId=${planData.plan_id}`;
+                    } else {
+                        // Dev view: nếu bạn đang trả plan_json để debug
+                        console.log('Generated plan (debug):', planData.plan_json);
+                        alert('Plan generated (debug mode). Check console for plan_json.');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    let errorMsg = `HTTP ${response.status}: ${errorText}`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMsg = errorJson.detail || errorJson.message || errorMsg;
+                    } catch (_) {}
+                    throw new Error(errorMsg);
+                }
+            } catch (err) {
+                console.error('Error generating plan:', err);
+                alert(`Error generating plan: ${err.message}`);
+            } finally {
+                document.getElementById('progressContainer').classList.add('hidden');
+            }
+        }
+
+        // Get submissions for specific meal type
+        function getMealSubmissions(mealType) {
+            console.log(`Filtering submissions for meal type: ${mealType}`);
+            console.log('All submissions:', submissions);
+
+            const filtered = submissions.filter(submission => {
+                const submissionMealType = submission.meal_type ? submission.meal_type.toLowerCase() : '';
+                console.log(`Submission ${submission.id}: meal_type=${submission.meal_type}, filtered_type=${submissionMealType}, matches=${submissionMealType === mealType}`);
+                return submissionMealType === mealType;
+            });
+
+            console.log(`Found ${filtered.length} submissions for ${mealType}:`, filtered);
+            return filtered;
+        }
+
+        // Get meal time based on type
+        function getMealTime(mealType) {
+            const times = {
+                'breakfast': '08:00',
+                'lunch': '12:00',
+                'dinner': '18:00'
+            };
+            return times[mealType] || '18:00';
+        }
+
+        // Simulate progress bar
+        function simulateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+
+                progressFill.style.width = progress + '%';
+
+                if (progress < 30) {
+                    progressText.textContent = 'Analyzing preferences...';
+                } else if (progress < 60) {
+                    progressText.textContent = 'Generating meal suggestions...';
+                } else if (progress < 90) {
+                    progressText.textContent = 'Optimizing recipes...';
+                } else {
+                    progressText.textContent = 'Finalizing your plan...';
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 200);
+        }
+
+        // View submission details
+        function viewSubmissionDetails(submissionId) {
+            const submission = submissions.find(s => s.id == submissionId);
+            if (submission) {
+                // Create a modal for better display
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-2xl font-bold text-gray-800">📋 Submission Details</h3>
+                            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold">&times;</button>
+                        </div>
+
+                        <!-- Basic Information Section -->
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">👤</span> Basic Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">User Name</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.display_name || submission.user_id}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Role</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.role}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Family</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.family_name || submission.family_id}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Age</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.age || 'Not specified'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meal Information Section -->
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">🍽️</span> Meal Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Meal Date</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${new Date(submission.meal_date).toLocaleDateString()}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Meal Type</p>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-1 ${getMealTypeBadgeClass(submission.meal_type)}">
+                                        ${submission.meal_type}
+                                    </span>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Submitted</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${new Date(submission.created_at).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences Section -->
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">⚙️</span> Preferences & Settings
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                ${renderPreferences(submission.preferences)}
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-6 mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">📝</span> Additional Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Drinks</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.drinks || 'None specified'}</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-4 shadow-sm">
+                                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Remark</p>
+                                    <p class="text-lg font-semibold text-gray-800 mt-1">${submission.remark || 'No remarks'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button onclick="this.closest('.fixed').remove()" class="btn btn-secondary px-8 py-3 text-lg">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Helper function to get meal type badge class
+        function getMealTypeBadgeClass(mealType) {
+            switch(mealType.toLowerCase()) {
+                case 'breakfast': return 'bg-yellow-100 text-yellow-800';
+                case 'lunch': return 'bg-blue-100 text-blue-800';
+                case 'dinner': return 'bg-purple-100 text-purple-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        // Helper function to render preferences in a user-friendly way
+        function renderPreferences(preferences) {
+            if (!preferences || typeof preferences !== 'object') {
+                return '<div class="col-span-2"><p class="text-gray-500 italic">No preferences specified</p></div>';
+            }
+
+            let html = '';
+
+            // Chef status
+            if (preferences.is_chef !== undefined) {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Chef Status</p>
+                        <div class="mt-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${preferences.is_chef ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${preferences.is_chef ? '👨‍🍳 Yes, I can cook' : '🍽️ No, I prefer not to cook'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Food style
+            if (preferences.food_style) {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Food Style</p>
+                        <p class="text-lg font-semibold text-gray-800 mt-1 capitalize">${preferences.food_style}</p>
+                    </div>
+                `;
+            }
+
+            // Allergies
+            if (preferences.allergies) {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Allergies</p>
+                        <p class="text-lg font-semibold text-red-600 mt-1">⚠️ ${preferences.allergies}</p>
+                    </div>
+                `;
+            }
+
+            // Liked tastes
+            if (preferences.liked_tastes && preferences.liked_tastes.length > 0) {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Liked Tastes</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            ${preferences.liked_tastes.map(taste =>
+                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    👍 ${taste}
+                                </span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Disliked tastes
+            if (preferences.disliked_tastes && preferences.disliked_tastes.length > 0) {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Disliked Tastes</p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            ${preferences.disliked_tastes.map(taste =>
+                                `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                    👎 ${taste}
+                                </span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Tasks
+            if (preferences.before_task && preferences.before_task !== 'none') {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Before Meal Task</p>
+                        <p class="text-lg font-semibold text-gray-800 mt-1">${preferences.before_task}</p>
+                    </div>
+                `;
+            }
+
+            if (preferences.after_task && preferences.after_task !== 'none') {
+                html += `
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">After Meal Task</p>
+                        <p class="text-lg font-semibold text-gray-800 mt-1">${preferences.after_task}</p>
+                    </div>
+                `;
+            }
+
+            return html || '<div class="col-span-2"><p class="text-gray-500 italic">No detailed preferences specified</p></div>';
+        }
+
+        // Delete submission
+        async function deleteSubmission(submissionId) {
+            await window.API_READY;
+            const BASE = window.API_BASE;
+
+            if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE}/submissions/${encodeURIComponent(submissionId)}?user_id=${encodeURIComponent(currentUser.user_id)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Reload submissions
+                    await loadSubmissions();
+                    alert('Submission deleted successfully');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Failed to delete submission: ${errorData.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+                alert('Error deleting submission');
+            }
+        }
+    </script>
+</body>
+</html>

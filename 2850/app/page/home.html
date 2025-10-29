@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; right: 0; background-color: white; min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 8px; overflow: hidden;
+        }
+        .dropdown-content.show { display: block; }
+        .dropdown-item { color: black; padding: 12px 16px; text-decoration: none; display: block; transition: background-color 0.2s; }
+        .dropdown-item:hover { background-color: #f1f5f9; }
+        .feature-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .feature-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .tooltip { position: relative; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 200px; background-color: #1f2937; color: #fff; text-align: center;
+            border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 125%; left: 50%;
+            margin-left: -100px; opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-gray-800">🍽️ Meal Planner</h1>
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button id="userProfileBtn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                <span id="userInitial">U</span>
+                            </div>
+                            <span id="userName" class="font-medium">User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="userDropdown" class="dropdown-content">
+                            <a href="#" id="editProfileBtn" class="dropdown-item">
+                                <span class="mr-2">✏️</span>Edit Profile
+                            </a>
+                            <a href="#" id="manageFamilyBtn" class="dropdown-item">
+                                <span class="mr-2">👨‍👩‍👧‍👦</span>Manage My Family
+                            </a>
+                            <a href="messages.html" id="messagesBtn" class="dropdown-item">
+                                <span class="mr-2">💬</span>Messages
+                                <span id="messageCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" id="logoutBtn" class="dropdown-item text-red-600">
+                                <span class="mr-2">🚪</span>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Welcome Message -->
+            <div class="text-center mb-12 fade-in">
+                <h2 class="text-4xl font-bold text-white mb-4">
+                    Welcome back, <span id="welcomeUserName">User</span>!
+                </h2>
+                <p class="text-xl text-blue-100">
+                    Ready to plan your next delicious meal?
+                </p>
+            </div>
+
+            <!-- Feature Grid -->
+            <div class="space-y-6 mb-8">
+              <!-- Row 1: two cards -->
+              <!-- Row 1: two cards, aligned with Household Management width -->
+                <div class="max-w-3xl mx-auto">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- [LEFT] Join a Meal -->
+                    <div class="feature-card w-full bg-white rounded-2xl shadow-xl p-6 text-center cursor-pointer" id="joinMealCard">
+                      <div class="text-6xl mb-4">🍽️</div>
+                      <h3 class="text-xl font-bold text-gray-800 mb-2">Join a Meal</h3>
+                      <p class="text-gray-600">Create or join your meal submission</p>
+                    </div>
+
+                    <!-- [RIGHT] My Submissions & Plans -->
+                    <div class="feature-card w-full bg-white rounded-2xl shadow-xl p-6 text-center cursor-pointer" id="mySubmissionsCard">
+                      <div class="text-6xl mb-4">📊</div>
+                      <h3 class="text-xl font-bold text-gray-800 mb-2">Created Plans</h3>
+                      <p class="text-gray-600 mb-4">View your history and plans</p>
+                    </div>
+                  </div>
+                </div>
+
+              <!-- Optional line -->
+              <p class="text-center text-blue-100">
+                Start creating meal plans and manage them once everyone has submitted their preferences!
+              </p>
+
+              <!-- Row 2: one centered wide card = Household Management -->
+              <div class="max-w-3xl mx-auto">
+                <div class="feature-card bg-white rounded-2xl shadow-xl p-6 text-center cursor-pointer" id="householdCard">
+                  <div class="text-6xl mb-4">🏠</div>
+                  <h3 class="text-xl font-bold text-gray-800 mb-2">Family Management</h3>
+                  <p class="text-gray-600 mb-4">Manage your family</p>
+
+                  <div id="householdButtons" class="hidden mt-4 space-y-2">
+                    <button id="joinFamilyBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                      Join Family
+                    </button>
+
+                    <div id="joinFamilyPanel" class="hidden">
+                      <div class="mt-3 w-full flex items-stretch gap-2">
+                        <input id="joinFamilyInput" type="text" placeholder="Enter Family ID"
+                               class="flex-1 w-0 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
+                        <button id="joinFamilySubmit" class="shrink-0 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          Join
+                        </button>
+                      </div>
+                      <p class="text-sm text-gray-500 mt-2 text-left">Ask the family holder for the Family ID.</p>
+                    </div>
+
+                    <button id="createFamilyBtn" class="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">
+                      Create Family
+                    </button>
+                    <button id="inviteSomeoneBtn" class="w-full bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors">
+                      Invite Someone
+                    </button>
+                  </div>
+
+                  <div id="noFamilyTooltip" class="tooltip hidden">
+                    <span class="tooltiptext">Please create a family or join an existing one.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== Guide Section (NEW) ===== -->
+              <section id="homeGuide" class="max-w-3xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-4 text-center text-blue-50 shadow-sm">
+                  <p class="text-base">
+                    👋 Welcome, <span id="guideName" class="font-semibold">friend</span>! Here’s what each section helps you do:
+                  </p>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="bg-white rounded-xl shadow p-4 text-center">
+                    <div class="text-3xl mb-1">🍽️</div>
+                    <h4 class="font-semibold text-gray-800">Join a Meal</h4>
+                    <p class="text-sm text-gray-600">
+                      Start or join today’s submission, pick dishes & roles, and lock in what you’ll eat together.
+                    </p>
+                  </div>
+
+                  <div class="bg-white rounded-xl shadow p-4 text-center">
+                    <div class="text-3xl mb-1">📊</div>
+                    <h4 class="font-semibold text-gray-800">Created Plans</h4>
+                    <p class="text-sm text-gray-600">
+                      Review your past generated plans. Reuse favourites or track what worked well.
+                    </p>
+                  </div>
+
+                  <div class="bg-white rounded-xl shadow p-4 text-center">
+                    <div class="text-3xl mb-1">🏠</div>
+                    <h4 class="font-semibold text-gray-800">Family Management</h4>
+                    <p class="text-sm text-gray-600">
+                      Create/join a family or invite members to have delicious meals together.
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <!-- ===== /Guide Section (NEW) ===== -->
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/notifications.js"></script>
+    <script>
+        // DOM elements - will be initialized after DOM loads
+        let userProfileBtn, userDropdown, userName, userInitial, welcomeUserName, messageCount;
+        let joinMealCard, householdCard, generatePlanCard, mySubmissionsCard;
+        // removed: joinMealForm, mealCodeInput, joinNowBtn, startSubmissionBtn
+        let householdButtons, noFamilyTooltip, createFamilyBtn, inviteSomeoneBtn;
+        // NEW
+        let joinFamilyBtn, joinFamilyPanel, joinFamilyInput, joinFamilySubmit;
+        // NEW (guide)
+        let guideName;
+
+        let familyCount, submissionCount, planCount;
+
+        let currentUser = null;
+        let userFamilies = [];
+
+        // Initialize DOM elements
+        function initializeDOMElements() {
+            userProfileBtn = document.getElementById('userProfileBtn');
+            userDropdown = document.getElementById('userDropdown');
+            userName = document.getElementById('userName');
+            userInitial = document.getElementById('userInitial');
+            welcomeUserName = document.getElementById('welcomeUserName');
+            messageCount = document.getElementById('messageCount');
+
+            joinMealCard = document.getElementById('joinMealCard');
+            householdCard = document.getElementById('householdCard');
+            generatePlanCard = document.getElementById('generatePlanCard');
+            mySubmissionsCard = document.getElementById('mySubmissionsCard');
+
+            // removed: joinMealForm/mealCodeInput/joinNowBtn/startSubmissionBtn
+
+            householdButtons = document.getElementById('householdButtons');
+            noFamilyTooltip = document.getElementById('noFamilyTooltip');
+            createFamilyBtn = document.getElementById('createFamilyBtn');
+            inviteSomeoneBtn = document.getElementById('inviteSomeoneBtn');
+
+            // NEW
+            joinFamilyBtn = document.getElementById('joinFamilyBtn');
+            joinFamilyPanel = document.getElementById('joinFamilyPanel');
+            joinFamilyInput = document.getElementById('joinFamilyInput');
+            joinFamilySubmit = document.getElementById('joinFamilySubmit');
+
+            familyCount = document.getElementById('familyCount');
+            submissionCount = document.getElementById('submissionCount');
+            planCount = document.getElementById('planCount');
+
+            // NEW (guide)
+            guideName = document.getElementById('guideName');
+        }
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            console.log('Home page loaded, initializing...');
+            console.log('Current sessionStorage:', Object.keys(sessionStorage).map(k => `${k}: ${sessionStorage.getItem(k)}`));
+
+            // Initialize DOM elements first
+            initializeDOMElements();
+            console.log('DOM elements initialized');
+
+            // Use auth.js for proper authentication
+            initAuth(
+                async (user) => {
+                    console.log('User authenticated:', user);
+                    currentUser = user;
+                    updateUserInfo();
+                    await loadUserData();
+
+                    // Start notification checking
+                    if (window.NotificationSystem) {
+                        window.NotificationSystem.start(user.user_id);
+                    }
+                    setupEventListeners();
+                    console.log('Home page fully initialized');
+                },
+                () => {
+                    console.log('Authentication failed, redirecting to index');
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Update user information display
+        function updateUserInfo() {
+            if (currentUser && userName && welcomeUserName && userInitial) {
+                userName.textContent = currentUser.user_name;
+                welcomeUserName.textContent = currentUser.user_name;
+                userInitial.textContent = currentUser.user_name.charAt(0).toUpperCase();
+                // NEW: điền tên vào lời chào ở Guide Section
+                if (guideName) guideName.textContent = currentUser.user_name;
+                console.log('User info updated:', currentUser.user_name);
+            } else {
+                console.error('DOM elements not found or user not loaded');
+            }
+        }
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                console.log('Loading user data for:', currentUser.user_id);
+
+                // Load user families
+                const familiesResponse = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+                if (familiesResponse.ok) {
+                    userFamilies = await familiesResponse.json();
+                    console.log('Loaded families:', userFamilies);
+                } else {
+                    console.error('Failed to load families:', familiesResponse.status);
+                }
+
+                // Load user submissions
+                const submissionsResponse = await fetch(`${API_BASE}/submissions/my?family_id=all&user_id=${currentUser.user_id}&limit=100`);
+                if (submissionsResponse.ok) {
+                    const submissions = await submissionsResponse.json();
+                    if (submissionCount) {
+                        submissionCount.textContent = submissions.length;
+                        console.log('Loaded submissions:', submissions.length);
+                    }
+                } else {
+                    console.error('Failed to load submissions:', submissionsResponse.status);
+                }
+
+                // Load user plans
+                const plansResponse = await fetch(`${API_BASE}/plans?family_id=all`);
+                if (plansResponse.ok) {
+                    const plans = await plansResponse.json();
+                    if (planCount) {
+                        planCount.textContent = plans.length;
+                        console.log('Loaded plans:', plans.length);
+                    }
+                } else {
+                    console.error('Failed to load plans:', plansResponse.status);
+                }
+
+                if (familyCount) {
+                    familyCount.textContent = userFamilies.length;
+                    console.log('Family count updated:', userFamilies.length);
+                }
+
+                // Update household management availability
+                updateHouseholdManagement();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Update household management based on user's family status
+        function updateHouseholdManagement() {
+            if (userFamilies.length === 0) {
+                // User has no families
+                householdCard.addEventListener('mouseenter', () => {
+                    noFamilyTooltip.classList.remove('hidden');
+                });
+                householdCard.addEventListener('mouseleave', () => {
+                    noFamilyTooltip.classList.add('hidden');
+                });
+
+                // Only disable invite someone (join family should be available)
+                inviteSomeoneBtn.disabled = true;
+                inviteSomeoneBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            console.log('Setting up event listeners');
+
+            // User dropdown
+            if (userProfileBtn && userDropdown) {
+                userProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userProfileBtn.contains(e.target)) {
+                        userDropdown
+                        classList.remove('show');
+                    }
+                });
+            } else {
+                console.error('User dropdown elements not found');
+            }
+
+            // Join meal card -> click toàn bộ card để vào submission.html
+            if (joinMealCard) {
+                joinMealCard.addEventListener('click', () => {
+                    window.location.href = 'submission.html';
+                });
+            }
+
+            // Household card
+            if (householdCard && householdButtons) {
+                householdCard.addEventListener('click', (e) => {
+                    if (!householdButtons.contains(e.target)) {
+                        householdButtons.classList.toggle('hidden');
+                    }
+                });
+            }
+
+            // (đã bỏ các handler joinNowBtn/mealCodeInput/startSubmissionBtn)
+
+            // NEW: Join Family actions
+            if (joinFamilyBtn && joinFamilyPanel) {
+                joinFamilyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    joinFamilyPanel.classList.toggle('hidden');
+                    if (!joinFamilyPanel.classList.contains('hidden')) {
+                        setTimeout(() => joinFamilyInput?.focus(), 0);
+                    }
+                });
+            }
+            if (joinFamilySubmit && joinFamilyInput) {
+                joinFamilySubmit.addEventListener('click', async () => {
+                    const familyId = (joinFamilyInput.value || '').trim();
+                    if (!familyId) { alert('Please enter a Family ID'); return; }
+                    try {
+                        const res = await fetch(`${API_BASE}/family/join`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ family_id: familyId, user_id: currentUser.user_id })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.detail || 'Join failed');
+                        alert(`Joined family: ${data.family_name}`);
+                        joinFamilyInput.value = '';
+                        joinFamilyPanel.classList.add('hidden');
+                        await loadUserData(); // refresh counters
+                    } catch (err) {
+                        alert(err.message);
+                    }
+                });
+            }
+
+            // Create family / Invite
+            if (createFamilyBtn) {
+                createFamilyBtn.addEventListener('click', () => {
+                    window.location.href = 'create_family.html';
+                });
+            }
+            if (inviteSomeoneBtn) {
+                inviteSomeoneBtn.addEventListener('click', () => {
+                    window.location.href = 'invite_member.html';
+                });
+            }
+
+            // Other feature cards
+            if (generatePlanCard) {
+                generatePlanCard.addEventListener('click', () => {
+                    window.location.href = 'generate_plan.html';
+                });
+            }
+
+            if (mySubmissionsCard) {
+                mySubmissionsCard.addEventListener('click', () => {
+                    window.location.href = 'history.html';
+                });
+            }
+
+            // User dropdown actions
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            const manageFamilyBtn = document.getElementById('manageFamilyBtn');
+            const messagesBtn = document.getElementById('messagesBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', () => {
+                    window.location.href = 'edit_profile.html';
+                });
+            }
+
+            if (manageFamilyBtn) {
+                manageFamilyBtn.addEventListener('click', () => {
+                    window.location.href = 'manage_family.html';
+                });
+            }
+
+            if (messagesBtn) {
+                messagesBtn.addEventListener('click', () => {
+                    window.location.href = 'messages.html';
+                });
+            }
+
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    logout();
+                });
+            }
+        }
+
+        // (Optional) legacy helper; không còn dùng ở trang này
+        async function joinMeal(mealCode) {
+            try {
+                if (mealCode.length !== 16) {
+                    alert('Invalid meal code format. Please check your code.');
+                    return;
+                }
+                const familyId = mealCode.substring(0, 8);
+                const mealInfo = mealCode.substring(8, 16);
+                window.location.href = `submission.html?mealCode=${mealCode}`;
+            } catch (error) {
+                console.error('Error joining meal:', error);
+                alert('Error joining meal. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

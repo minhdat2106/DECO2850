@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Create Meal Code</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Force English date format */
+        input[type="date"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+        
+        input[type="datetime-local"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .hidden {
+            display: none;
+        }
+        .code-display {
+            background: #f3f4f6;
+            border: 2px dashed #9ca3af;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 16px 0;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-item {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        /* Collapsible section styles */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+            padding: 16px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            display: flex;
+            justify-between: align-items: center;
+        }
+        .collapsible-header:hover {
+            background: #e5e7eb;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapsible-content.expanded {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        .toggle-icon.rotated {
+            transform: rotate(90deg);
+        }
+        .meal-code-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .meal-code-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        .meal-code-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .meal-code-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .meal-code-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-2xl mx-auto px-4">
+            <!-- User Info Header -->
+            <div class="flex justify-between items-center mb-6 fade-in">
+                <div></div>
+                <div class="relative">
+                    <button id="userProfileBtn" class="flex items-center space-x-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-3 hover:bg-opacity-30 transition-all">
+                        <div class="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
+                            <span id="userInitial" class="text-lg font-bold text-white">U</span>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-white font-semibold" id="userName">User</div>
+                            <div class="text-blue-100 text-xs" id="userRole">Member</div>
+                        </div>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- User Dropdown -->
+                    <div id="userDropdown" class="dropdown-content">
+                        <a href="edit_profile.html" class="dropdown-item">
+                            <span class="mr-2">✏️</span>Edit Profile
+                        </a>
+                        <a href="manage_family.html" class="dropdown-item">
+                            <span class="mr-2">👨‍👩‍👧‍👦</span>Manage My Family
+                        </a>
+                        <a href="messages.html" class="dropdown-item">
+                            <span class="mr-2">💬</span>Messages
+                            <span id="messageCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                        </a>
+                        <hr class="my-1">
+                        <a href="#" id="logoutBtn" class="dropdown-item text-red-600">
+                            <span class="mr-2">🚪</span>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">🍽️ Create Meal Code</h1>
+                <p class="text-xl text-blue-100">Generate invitation codes for your meals</p>
+            </div>
+
+            <!-- Existing Meal Codes -->
+            <div class="section fade-in">
+                <div class="collapsible-header" onclick="toggleExistingCodes()">
+                    <h2 class="text-2xl font-bold text-gray-800">Existing Meal Codes</h2>
+                    <span class="toggle-icon" id="toggleIcon">▶</span>
+                </div>
+                <div class="collapsible-content" id="existingCodesContent">
+                    <div class="meal-code-list" id="existingMealCodes">
+                        <!-- Existing meal codes will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Form -->
+            <div class="section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Create New Meal Code</h2>
+                
+                <!-- Alert Messages -->
+                <div id="alertContainer"></div>
+
+                <!-- Family Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Family</label>
+                    <select id="familySelect" class="form-input" required>
+                        <option value="">Choose a family...</option>
+                    </select>
+                </div>
+
+                <!-- Participant Count -->
+                <div class="form-group">
+                    <label for="participantCount" class="form-label">Expected Participant Count</label>
+                    <input 
+                        type="number" 
+                        id="participantCount" 
+                        class="form-input" 
+                        min="1" 
+                        max="20"
+                        placeholder="How many people will join this meal?"
+                        required
+                    >
+                </div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label for="mealDate" class="form-label">Meal Date</label>
+                    <input 
+                        type="date" 
+                        id="mealDate" 
+                        class="form-input" 
+                        lang="en"
+                        data-format="YYYY-MM-DD"
+                        required
+                    >
+                </div>
+
+                <!-- Meal Type -->
+                <div class="form-group">
+                    <label for="mealType" class="form-label">Meal Type</label>
+                    <select id="mealType" class="form-input" required>
+                        <option value="">Select meal type</option>
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                    </select>
+                </div>
+
+                <!-- Create Button -->
+                <div class="form-group">
+                    <button id="createCodeBtn" class="btn btn-primary w-full" disabled>
+                        Generate Meal Code
+                    </button>
+                </div>
+
+                <!-- Generated Code Display -->
+                <div id="codeResult" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Your Meal Code</h3>
+                    <div class="code-display" id="generatedCode">
+                        <!-- Generated code will be displayed here -->
+                    </div>
+                    <div class="text-center mt-4">
+                        <button id="copyCodeBtn" class="btn btn-success">Copy Code</button>
+                        <button id="createAnotherBtn" class="btn btn-secondary ml-2">Create Another</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center">
+                <button id="backBtn" class="btn btn-secondary">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/notifications.js"></script>
+    <script>
+        
+        let currentUser = null;
+        let families = [];
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            // Use auth.js for proper authentication
+            initAuth(
+                async (user) => {
+                    currentUser = user;
+                    updateUserInfo();
+                    setupEventListeners();
+                    await loadFamilies();
+                    await loadExistingMealCodes();
+                    setupDateInputs();
+                    
+                    // Set default date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('mealDate').value = today;
+                    
+                    // Start notification checking
+                    if (window.NotificationSystem) {
+                        window.NotificationSystem.start(user.user_id);
+                    }
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Update user information display
+        function updateUserInfo() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.user_name;
+                document.getElementById('userInitial').textContent = currentUser.user_name.charAt(0).toUpperCase();
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+
+            // Create code button
+            document.getElementById('createCodeBtn').addEventListener('click', createMealCode);
+
+            // Copy code button
+            document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
+
+            // Create another button
+            document.getElementById('createAnotherBtn').addEventListener('click', resetForm);
+
+            // User dropdown
+            document.getElementById('userProfileBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('userDropdown').classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('userProfileBtn').contains(e.target)) {
+                    document.getElementById('userDropdown').classList.remove('show');
+                }
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+
+            // Form validation
+            document.getElementById('familySelect').addEventListener('change', validateForm);
+            document.getElementById('participantCount').addEventListener('input', validateForm);
+            document.getElementById('mealDate').addEventListener('change', validateForm);
+            document.getElementById('mealType').addEventListener('change', validateForm);
+        }
+
+        // Load user's families
+        async function loadFamilies() {
+            try {
+                const response = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+                if (response.ok) {
+                    families = await response.json();
+                    displayFamilies();
+                } else {
+                    showAlert('Failed to load families', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading families:', error);
+                showAlert('Error loading families', 'error');
+            }
+        }
+
+        // Display families in select dropdown
+        function displayFamilies() {
+            const select = document.getElementById('familySelect');
+            select.innerHTML = '<option value="">Choose a family...</option>';
+
+            if (families.length === 0) {
+                select.innerHTML = '<option value="">No families found. Please create a family first.</option>';
+                return;
+            }
+
+            families.forEach(family => {
+                const option = document.createElement('option');
+                option.value = family.family_id;
+                option.textContent = `${family.family_name} (${family.family_id})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Load existing meal codes
+        async function loadExistingMealCodes() {
+            try {
+                const response = await fetch(`${API_BASE}/meal-code/user/${currentUser.user_id}`);
+                if (response.ok) {
+                    const mealCodes = await response.json();
+                    displayExistingMealCodes(mealCodes);
+                } else {
+                    document.getElementById('existingMealCodes').innerHTML = '<p class="text-gray-500">No existing meal codes found.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading existing meal codes:', error);
+                document.getElementById('existingMealCodes').innerHTML = '<p class="text-red-500">Error loading existing meal codes.</p>';
+            }
+        }
+
+        // Display existing meal codes
+        function displayExistingMealCodes(mealCodes) {
+            const container = document.getElementById('existingMealCodes');
+            
+            if (mealCodes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No existing meal codes found.</p>';
+                return;
+            }
+
+            // 去重：相同的meal code只保留一个
+            const uniqueMealCodes = [];
+            const seenCodes = new Set();
+            
+            for (const mealCode of mealCodes) {
+                if (!seenCodes.has(mealCode.meal_code)) {
+                    seenCodes.add(mealCode.meal_code);
+                    uniqueMealCodes.push(mealCode);
+                }
+            }
+
+            // 按距离今天最近的时间排序（最上面的是最近的）
+            uniqueMealCodes.sort((a, b) => {
+                const today = new Date();
+                const dateA = new Date(a.meal_date);
+                const dateB = new Date(b.meal_date);
+                
+                // 计算距离今天的天数
+                const diffA = Math.abs(dateA - today);
+                const diffB = Math.abs(dateB - today);
+                
+                return diffA - diffB;
+            });
+
+            container.innerHTML = uniqueMealCodes.map(mealCode => `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold text-lg">${mealCode.family_name}</h3>
+                            <p class="text-sm text-gray-600">Family ID: ${mealCode.family_id}</p>
+                            <p class="text-sm text-gray-600">Date: ${mealCode.meal_date}</p>
+                            <p class="text-sm text-gray-600">Meal Type: ${mealCode.meal_type}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono text-lg font-bold">${mealCode.meal_code}</p>
+                            <button class="btn btn-primary mt-2" onclick="copyMealCode('${mealCode.meal_code}')">
+                                Copy Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Copy meal code to clipboard
+        function copyMealCode(mealCode) {
+            navigator.clipboard.writeText(mealCode).then(() => {
+                showAlert('Meal code copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showAlert('Failed to copy meal code', 'error');
+            });
+        }
+
+        // Validate form
+        function validateForm() {
+            const familyId = document.getElementById('familySelect').value;
+            const participantCount = document.getElementById('participantCount').value;
+            const mealDate = document.getElementById('mealDate').value;
+            const mealType = document.getElementById('mealType').value;
+
+            const createBtn = document.getElementById('createCodeBtn');
+            createBtn.disabled = !familyId || !participantCount || !mealDate || !mealType;
+        }
+
+        // Create meal code
+        async function createMealCode() {
+            const familyId = document.getElementById('familySelect').value;
+            const participantCount = parseInt(document.getElementById('participantCount').value);
+            const mealDate = document.getElementById('mealDate').value;
+            const mealType = document.getElementById('mealType').value;
+
+            // Set time based on meal type
+            const mealTimes = {
+                'breakfast': '08:00',
+                'lunch': '12:00',
+                'dinner': '18:00'
+            };
+            const mealTime = `${mealDate} ${mealTimes[mealType]}`;
+
+            try {
+                const response = await fetch(`${API_BASE}/meal-code/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        family_id: familyId,
+                        user_id: currentUser.user_id,
+                        participant_count: participantCount,
+                        meal_time: mealTime,
+                        meal_type: mealType
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showGeneratedCode(result.meal_code);
+                } else {
+                    const error = await response.json();
+                    showAlert(`Error creating meal code: ${error.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating meal code:', error);
+                showAlert('Error creating meal code. Please try again.', 'error');
+            }
+        }
+
+        // Show generated code
+        function showGeneratedCode(code) {
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codeResult').classList.remove('hidden');
+            showAlert('Meal code generated successfully!', 'success');
+        }
+
+        // Copy code to clipboard
+        async function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            try {
+                await navigator.clipboard.writeText(code);
+                showAlert('Code copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Failed to copy code:', error);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('Code copied to clipboard!', 'success');
+            }
+        }
+
+        // Reset form for another code
+        function resetForm() {
+            document.getElementById('codeResult').classList.add('hidden');
+            document.getElementById('participantCount').value = '';
+            document.getElementById('mealDate').value = '';
+            document.getElementById('mealType').value = '';
+            document.getElementById('familySelect').value = '';
+            validateForm();
+        }
+
+        // Setup date inputs to force English format
+        function setupDateInputs() {
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                // Set the input's locale to English
+                input.setAttribute('lang', 'en');
+                input.setAttribute('data-format', 'YYYY-MM-DD');
+                
+                // Force English locale on the input
+                input.style.direction = 'ltr';
+                input.style.textAlign = 'left';
+                
+                // Add event listener to format date on change
+                input.addEventListener('change', function() {
+                    if (this.value) {
+                        // Ensure the date is in YYYY-MM-DD format
+                        const date = new Date(this.value);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        this.value = `${year}-${month}-${day}`;
+                    }
+                });
+                
+                // Force focus and blur to trigger locale change
+                input.addEventListener('focus', function() {
+                    this.setAttribute('lang', 'en');
+                });
+            });
+        }
+
+        // Toggle existing codes section
+        function toggleExistingCodes() {
+            const content = document.getElementById('existingCodesContent');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.textContent = '▶';
+                icon.classList.remove('rotated');
+            } else {
+                content.classList.add('expanded');
+                icon.textContent = '▼';
+                icon.classList.add('rotated');
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

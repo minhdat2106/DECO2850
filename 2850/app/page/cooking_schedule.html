@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Plan Details - Meal Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-item {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .dish-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .dish-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center">
+                        <a href="history.html?tab=plans" class="text-blue-600 hover:text-blue-800 text-lg font-semibold mr-4">
+                            ← Back to Plans
+                        </a>
+                        <h1 class="text-2xl font-bold text-gray-800">📋 Meal Plan Details</h1>
+                    </div>
+                    
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <button id="userProfileBtn" class="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                                <span id="userInitial">U</span>
+                            </div>
+                            <span id="userName" class="font-medium">User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="userDropdown" class="dropdown-content">
+                            <a href="edit_profile.html" class="dropdown-item">
+                                <span class="mr-2">✏️</span>Edit Profile
+                            </a>
+                            <a href="manage_family.html" class="dropdown-item">
+                                <span class="mr-2">👨‍👩‍👧‍👦</span>Manage My Family
+                            </a>
+                            <a href="messages.html" class="dropdown-item">
+                                <span class="mr-2">💬</span>Messages
+                                <span id="messageCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" id="logoutBtn" class="dropdown-item text-red-600">
+                                <span class="mr-2">🚪</span>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Plan Info -->
+            <div class="bg-white rounded-lg shadow-xl p-6 mb-6 fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4" id="planTitle">
+                    Meal Plan Information
+                </h2>
+                <p class="text-gray-600 mb-6" id="planInfo">
+                    Loading plan information...
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="text-sm text-gray-600 mb-1">Meal Type</div>
+                        <div class="text-xl font-bold text-blue-600" id="mealType">--</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="text-sm text-gray-600 mb-1">Number of Dishes</div>
+                        <div class="text-xl font-bold text-purple-600" id="dishCount">--</div>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4">
+                        <div class="text-sm text-gray-600 mb-1">Participants</div>
+                        <div class="text-xl font-bold text-orange-600" id="participantCount">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Display -->
+            <div id="messageContainer" class="hidden mb-6">
+                <div id="messageContent" class="p-4 rounded-lg"></div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingContainer" class="text-center py-12">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-white text-lg">Loading plan information...</p>
+            </div>
+
+            <!-- Plan Content -->
+            <div id="planContainer" class="hidden">
+                <!-- Dishes List -->
+                <div class="bg-white rounded-lg shadow-xl p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">🍽️ Dishes to Prepare</h3>
+                    <div id="dishesContent" class="space-y-4">
+                        <!-- Dishes will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Preparation Checklist -->
+                <div class="bg-white rounded-lg shadow-xl p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">✅ Preparation Checklist</h3>
+                    <div id="prepContent" class="space-y-3">
+                        <!-- Prep items will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Required Tools -->
+                <div class="bg-white rounded-lg shadow-xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">🔧 Required Tools & Tableware</h3>
+                    <div id="toolsContent" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Tools will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden text-center py-12">
+                <div class="text-6xl mb-4">😕</div>
+                <h3 class="text-2xl font-bold text-white mb-4">Plan Not Available</h3>
+                <p class="text-blue-100 mb-6">Unable to load plan information.</p>
+                <a href="history.html?tab=plans" class="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors font-semibold">
+                    Back to Plans
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentPlan = null;
+
+        // DOM elements
+        let userProfileBtn, userDropdown, userName, userInitial;
+        let planTitle, planInfo, mealType, dishCount, participantCount;
+        let messageContainer, messageContent, loadingContainer, planContainer, errorState;
+        let dishesContent, prepContent, toolsContent;
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            initializeDOMElements();
+            
+            initAuth(
+                async (user) => {
+                    currentUser = user;
+                    updateUserInfo();
+                    await loadPlanInfo();
+                    setupEventListeners();
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Initialize DOM elements
+        function initializeDOMElements() {
+            userProfileBtn = document.getElementById('userProfileBtn');
+            userDropdown = document.getElementById('userDropdown');
+            userName = document.getElementById('userName');
+            userInitial = document.getElementById('userInitial');
+            
+            planTitle = document.getElementById('planTitle');
+            planInfo = document.getElementById('planInfo');
+            mealType = document.getElementById('mealType');
+            dishCount = document.getElementById('dishCount');
+            participantCount = document.getElementById('participantCount');
+            
+            messageContainer = document.getElementById('messageContainer');
+            messageContent = document.getElementById('messageContent');
+            loadingContainer = document.getElementById('loadingContainer');
+            planContainer = document.getElementById('planContainer');
+            errorState = document.getElementById('errorState');
+            
+            dishesContent = document.getElementById('dishesContent');
+            prepContent = document.getElementById('prepContent');
+            toolsContent = document.getElementById('toolsContent');
+        }
+
+        // Update user information
+        function updateUserInfo() {
+            if (currentUser && userName && userInitial) {
+                userName.textContent = currentUser.user_name;
+                userInitial.textContent = currentUser.user_name.charAt(0).toUpperCase();
+            }
+        }
+
+        // Load plan information
+        async function loadPlanInfo() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const planId = urlParams.get('planId');
+                
+                if (!planId) {
+                    showError('No plan ID provided');
+                    return;
+                }
+
+                showLoading();
+                
+                const planResponse = await fetch(`${API_BASE}/plan/${planId}`);
+                if (!planResponse.ok) {
+                    throw new Error(`Failed to load plan: ${planResponse.status}`);
+                }
+                
+                currentPlan = await planResponse.json();
+                displayPlanInfo();
+                
+            } catch (error) {
+                console.error('Error loading plan:', error);
+                showError('Error loading plan: ' + error.message);
+            }
+        }
+
+        // Display plan information
+        function displayPlanInfo() {
+            if (!currentPlan || !currentPlan.plan_json) {
+                showError('Plan data not available');
+                return;
+            }
+
+            loadingContainer.classList.add('hidden');
+            errorState.classList.add('hidden');
+            planContainer.classList.remove('hidden');
+
+            const planData = currentPlan.plan_json;
+            const dishes = planData.dishes || [];
+            const headcount = planData.meta?.headcount || currentPlan.submission_cnt || 1;
+
+            // Update plan info
+            planTitle.textContent = `Meal Plan - ${currentPlan.meal_type?.toUpperCase() || 'MEAL'}`;
+            planInfo.textContent = `${currentPlan.meal_date} | Plan Code: ${currentPlan.plan_code || 'N/A'}`;
+            mealType.textContent = currentPlan.meal_type?.toUpperCase() || 'N/A';
+            dishCount.textContent = dishes.length;
+            participantCount.textContent = `${headcount} people`;
+
+            // Display dishes
+            dishesContent.innerHTML = dishes.map((dish, index) => `
+                <div class="dish-card bg-gray-50 rounded-lg p-5 border border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="text-lg font-bold text-gray-800 mb-2">${dish.name || 'Unnamed Dish'}</h4>
+                            <span class="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium mb-3">
+                                ${dish.category || 'Main Course'}
+                            </span>
+                            ${dish.video_url ? `
+                                <div class="mt-3">
+                                    <a href="${dish.video_url}" target="_blank" 
+                                       class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1">
+                                        🎥 Watch Video Tutorial
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="text-right text-sm text-gray-500">
+                            #${index + 1}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Display prep checklist
+            const prepChecklist = [
+                'Wash hands and clean workspace',
+                'Gather all ingredients from refrigerator',
+                'Prepare cutting boards and knives',
+                'Set up stoves with appropriate cookware',
+                `Prepare ${headcount} sets of plates and utensils`,
+                'Fill water glasses and place on table',
+                'Review all recipes before starting'
+            ];
+
+            prepContent.innerHTML = prepChecklist.map((item, index) => `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" id="prep-${index}" class="w-5 h-5 text-blue-600 rounded cursor-pointer">
+                    <label for="prep-${index}" class="flex-1 text-gray-700 cursor-pointer select-none">
+                        ${item}
+                    </label>
+                </div>
+            `).join('');
+
+            // Display tools
+            const tools = [
+                { name: 'Cutting Board', icon: '🔪', quantity: 2 },
+                { name: 'Chef Knife', icon: '🔪', quantity: 2 },
+                { name: 'Wok/Pan', icon: '🍳', quantity: 2 },
+                { name: 'Spatula', icon: '🥄', quantity: 2 },
+                { name: 'Mixing Bowls', icon: '🥣', quantity: 3 },
+                { name: 'Measuring Cups', icon: '📏', quantity: 1 },
+                { name: 'Plates', icon: '🍽️', quantity: headcount },
+                { name: 'Chopsticks/Forks', icon: '🥢', quantity: headcount },
+                { name: 'Spoons', icon: '🥄', quantity: headcount },
+                { name: 'Serving Dishes', icon: '🍲', quantity: dishes.length }
+            ];
+
+            toolsContent.innerHTML = tools.map(tool => `
+                <div class="bg-gray-50 rounded-lg p-4 text-center hover:bg-gray-100 transition-colors">
+                    <div class="text-3xl mb-2">${tool.icon}</div>
+                    <div class="font-medium text-gray-800 text-sm">${tool.name}</div>
+                    <div class="text-sm text-gray-500 mt-1">× ${tool.quantity}</div>
+                </div>
+            `).join('');
+        }
+
+        // Show loading state
+        function showLoading() {
+            loadingContainer.classList.remove('hidden');
+            planContainer.classList.add('hidden');
+            errorState.classList.add('hidden');
+        }
+
+        // Show error state
+        function showError(message) {
+            loadingContainer.classList.add('hidden');
+            planContainer.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            showMessage(message, 'error');
+        }
+
+        // Show message
+        function showMessage(message, type = 'info') {
+            messageContent.textContent = message;
+            messageContent.className = `p-4 rounded-lg ${
+                type === 'error' ? 'bg-red-100 text-red-700' : 
+                type === 'success' ? 'bg-green-100 text-green-700' : 
+                'bg-blue-100 text-blue-700'
+            }`;
+            messageContainer.classList.remove('hidden');
+            
+            setTimeout(() => {
+                messageContainer.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // User dropdown
+            if (userProfileBtn && userDropdown) {
+                userProfileBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!userProfileBtn.contains(e.target)) {
+                        userDropdown.classList.remove('show');
+                    }
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logout();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
+

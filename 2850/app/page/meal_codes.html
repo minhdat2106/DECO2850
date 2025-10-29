@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Meal Codes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Force English date format */
+        input[type="date"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+        }
+        
+        input[type="datetime-local"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .family-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f9fafb;
+        }
+        .meal-code-item {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .code-display {
+            background: #f3f4f6;
+            border: 2px dashed #9ca3af;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 16px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #374151;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">🍽️ Meal Codes</h1>
+                <p class="text-xl text-blue-100">Create and manage meal invitation codes</p>
+            </div>
+
+            <!-- Create New Meal Code Section -->
+            <div class="section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Create New Meal Code</h2>
+                <div id="familiesList" class="space-y-4">
+                    <!-- Families will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Existing Meal Codes Section -->
+            <div class="section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Existing Meal Codes</h2>
+                <div id="existingCodesList">
+                    <!-- Existing codes will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center">
+                <button id="backBtn" class="btn btn-secondary">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Meal Modal -->
+    <div id="createMealModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Create Meal Code</h3>
+            <form id="createMealForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Family</label>
+                    <input type="text" id="modalFamilyId" class="w-full px-3 py-2 border border-gray-300 rounded-lg" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Participant Count</label>
+                    <input type="number" id="participantCount" class="w-full px-3 py-2 border border-gray-300 rounded-lg" min="1" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
+                    <input type="datetime-local" id="mealDateTime" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
+                    <select id="mealType" class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                        <option value="">Select meal type</option>
+                        <option value="breakfast">Breakfast</option>
+                        <option value="lunch">Lunch</option>
+                        <option value="dinner">Dinner</option>
+                    </select>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="submit" class="btn btn-primary flex-1">Create Code</button>
+                    <button type="button" id="cancelCreate" class="btn btn-secondary flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generated Code Modal -->
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Meal Code Generated!</h3>
+            <div class="code-display" id="generatedCode">
+                <!-- Generated code will be displayed here -->
+            </div>
+            <div class="text-center">
+                <button id="copyCodeBtn" class="btn btn-success">Copy Code</button>
+                <button id="closeCodeModal" class="btn btn-secondary ml-2">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        
+        let currentUser = null;
+        let families = [];
+        let mealCodes = [];
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            // Use auth.js for proper authentication
+            initAuth(
+                async (user) => {
+                    currentUser = user;
+                    setupEventListeners();
+                    setupDateTimeInputs();
+                    await loadData();
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Setup datetime inputs to force English format
+        function setupDateTimeInputs() {
+            const datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+            datetimeInputs.forEach(input => {
+                // Set the input's locale to English
+                input.setAttribute('lang', 'en');
+                input.setAttribute('data-format', 'YYYY-MM-DDTHH:mm');
+                
+                // Force English locale on the input
+                input.style.direction = 'ltr';
+                input.style.textAlign = 'left';
+                
+                // Add event listener to format datetime on change
+                input.addEventListener('change', function() {
+                    if (this.value) {
+                        // Ensure the datetime is in proper format
+                        const date = new Date(this.value);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        this.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    }
+                });
+                
+                // Force focus and blur to trigger locale change
+                input.addEventListener('focus', function() {
+                    this.setAttribute('lang', 'en');
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+
+            // Modal close buttons
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', closeModals);
+            });
+
+            // Cancel create button
+            document.getElementById('cancelCreate').addEventListener('click', closeModals);
+
+            // Close code modal button
+            document.getElementById('closeCodeModal').addEventListener('click', closeModals);
+
+            // Create meal form
+            document.getElementById('createMealForm').addEventListener('submit', handleCreateMeal);
+
+            // Copy code button
+            document.getElementById('copyCodeBtn').addEventListener('click', copyCode);
+
+            // Close modals when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    closeModals();
+                }
+            });
+        }
+
+        // Load all data
+        async function loadData() {
+            await Promise.all([
+                loadFamilies(),
+                loadMealCodes()
+            ]);
+        }
+
+        // Load user's families
+        async function loadFamilies() {
+            try {
+                const response = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+                if (response.ok) {
+                    families = await response.json();
+                    displayFamilies();
+                } else {
+                    console.error('Failed to load families');
+                }
+            } catch (error) {
+                console.error('Error loading families:', error);
+            }
+        }
+
+        // Load existing meal codes
+        async function loadMealCodes() {
+            try {
+                const response = await fetch(`${API_BASE}/meal-code/user/${currentUser.user_id}`);
+                if (response.ok) {
+                    mealCodes = await response.json();
+                    displayExistingCodes();
+                } else {
+                    console.error('Failed to load meal codes');
+                    mealCodes = [];
+                    displayExistingCodes();
+                }
+            } catch (error) {
+                console.error('Error loading meal codes:', error);
+                mealCodes = [];
+                displayExistingCodes();
+            }
+        }
+
+        // Display families
+        function displayFamilies() {
+            const container = document.getElementById('familiesList');
+            container.innerHTML = '';
+
+            if (families.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic">No families found. Please create or join a family first.</p>';
+                return;
+            }
+
+            families.forEach(family => {
+                const familyCard = document.createElement('div');
+                familyCard.className = 'family-card';
+                familyCard.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">${family.family_name}</h3>
+                            <p class="text-sm text-gray-600">ID: ${family.family_id}</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openCreateMealModal('${family.family_id}', '${family.family_name}')">
+                            Create Meal
+                        </button>
+                    </div>
+                `;
+                container.appendChild(familyCard);
+            });
+        }
+
+        // Display existing meal codes
+        function displayExistingCodes() {
+            const container = document.getElementById('existingCodesList');
+            container.innerHTML = '';
+
+            if (mealCodes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic">No meal codes created yet.</p>';
+                return;
+            }
+
+            // 去重：相同的meal code只保留一个
+            const uniqueMealCodes = [];
+            const seenCodes = new Set();
+            
+            for (const code of mealCodes) {
+                if (!seenCodes.has(code.meal_code)) {
+                    seenCodes.add(code.meal_code);
+                    uniqueMealCodes.push(code);
+                }
+            }
+
+            // 按距离今天最近的时间排序（最上面的是最近的）
+            uniqueMealCodes.sort((a, b) => {
+                const today = new Date();
+                const dateA = new Date(a.meal_date);
+                const dateB = new Date(b.meal_date);
+                
+                // 计算距离今天的天数
+                const diffA = Math.abs(dateA - today);
+                const diffB = Math.abs(dateB - today);
+                
+                return diffA - diffB;
+            });
+
+            // Group codes by family
+            const codesByFamily = {};
+            uniqueMealCodes.forEach(code => {
+                if (!codesByFamily[code.family_id]) {
+                    codesByFamily[code.family_id] = [];
+                }
+                codesByFamily[code.family_id].push(code);
+            });
+
+            Object.keys(codesByFamily).forEach(familyId => {
+                const family = families.find(f => f.family_id === familyId);
+                const familyName = family ? family.family_name : familyId;
+                
+                const familySection = document.createElement('div');
+                familySection.className = 'mb-6';
+                familySection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${familyName}</h3>
+                    <div id="codes-${familyId}">
+                        <!-- Codes for this family will be added here -->
+                    </div>
+                `;
+                container.appendChild(familySection);
+
+                const codesContainer = document.getElementById(`codes-${familyId}`);
+                codesByFamily[familyId].forEach(code => {
+                    const codeItem = document.createElement('div');
+                    codeItem.className = 'meal-code-item';
+                    codeItem.innerHTML = `
+                        <div class="flex-1">
+                            <div class="font-mono text-lg font-bold">${code.meal_code}</div>
+                            <div class="text-sm text-gray-600">
+                                ${new Date(code.meal_date).toLocaleDateString()} • 
+                                ${code.meal_type}
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="btn btn-primary btn-small" onclick="copyToClipboard('${code.meal_code}')">
+                                Copy
+                            </button>
+                        </div>
+                    `;
+                    codesContainer.appendChild(codeItem);
+                });
+            });
+        }
+
+        // Open create meal modal
+        function openCreateMealModal(familyId, familyName) {
+            document.getElementById('modalFamilyId').value = `${familyId} (${familyName})`;
+            document.getElementById('createMealModal').style.display = 'block';
+            
+            // Set default date/time to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('mealDateTime').value = now.toISOString().slice(0, 16);
+        }
+
+        // Handle create meal form submission
+        async function handleCreateMeal(e) {
+            e.preventDefault();
+            
+            const familyId = document.getElementById('modalFamilyId').value.split(' ')[0];
+            const participantCount = parseInt(document.getElementById('participantCount').value);
+            const mealDateTime = document.getElementById('mealDateTime').value;
+            const mealType = document.getElementById('mealType').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/meal-code/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        family_id: familyId,
+                        user_id: currentUser.user_id,
+                        participant_count: participantCount,
+                        meal_time: mealDateTime,
+                        meal_type: mealType
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showGeneratedCode(result.meal_code);
+                    closeModals();
+                    await loadMealCodes(); // Refresh the list
+                } else {
+                    const error = await response.json();
+                    alert(`Error creating meal code: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error creating meal code:', error);
+                alert('Error creating meal code. Please try again.');
+            }
+        }
+
+        // Show generated code
+        function showGeneratedCode(code) {
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codeModal').style.display = 'block';
+        }
+
+        // Copy code to clipboard
+        async function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            try {
+                await navigator.clipboard.writeText(code);
+                alert('Code copied to clipboard!');
+            } catch (error) {
+                console.error('Failed to copy code:', error);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Code copied to clipboard!');
+            }
+        }
+
+        // Copy to clipboard (for existing codes)
+        async function copyToClipboard(code) {
+            try {
+                await navigator.clipboard.writeText(code);
+                alert('Code copied to clipboard!');
+            } catch (error) {
+                console.error('Failed to copy code:', error);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Code copied to clipboard!');
+            }
+        }
+
+        // Close all modals
+        function closeModals() {
+            document.getElementById('createMealModal').style.display = 'none';
+            document.getElementById('codeModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .pencil-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .input-group:hover .pencil-icon {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-12 fade-in">
+                <h1 class="text-6xl font-bold text-white mb-4">
+                    🍽️ Meal Planner
+                </h1>
+                <p class="text-xl text-blue-100">
+                    Create your account to start planning
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-auto fade-in">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">📝</div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
+                    <p class="text-gray-600">Fill in your details to get started</p>
+                </div>
+
+                <form id="registerForm" class="space-y-6">
+                    <div class="input-group">
+                        <label for="userId" class="block text-sm font-medium text-gray-700 mb-2">
+                            User ID <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="userId" 
+                                name="userId"
+                                class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                placeholder="Enter your unique User ID"
+                                required
+                            >
+                            <span class="pencil-icon absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer">
+                                ✏️
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="confirmUserId" class="block text-sm font-medium text-gray-700 mb-2">
+                            Confirm User ID <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="confirmUserId" 
+                                name="confirmUserId"
+                                class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                placeholder="Confirm your User ID"
+                                required
+                            >
+                            <span class="pencil-icon absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer">
+                                ✏️
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="userName" class="block text-sm font-medium text-gray-700 mb-2">
+                            Display Name <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="userName" 
+                                name="userName"
+                                class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                placeholder="Enter your display name"
+                                required
+                            >
+                            <span class="pencil-icon absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer">
+                                ✏️
+                            </span>
+                        </div>
+                    </div>
+
+                    <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="text-red-500 mr-2">⚠️</span>
+                            <span id="errorText"></span>
+                        </div>
+                    </div>
+
+                    <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                        <div class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            <span id="successText"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button 
+                            type="submit" 
+                            class="flex-1 bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                            Register
+                        </button>
+                        <button 
+                            type="button" 
+                            id="backBtn"
+                            class="flex-1 bg-gray-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                        >
+                            Back to Login
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Features -->
+            <div class="mt-16 text-center fade-in">
+                <h3 class="text-2xl font-bold text-white mb-8">Why Join Us?</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6">
+                        <div class="text-4xl mb-3">👥</div>
+                        <h4 class="text-lg font-semibold text-white mb-2">Family Management</h4>
+                        <p class="text-blue-100">Create and manage your family groups easily</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6">
+                        <div class="text-4xl mb-3">🍽️</div>
+                        <h4 class="text-lg font-semibold text-white mb-2">Smart Planning</h4>
+                        <p class="text-blue-100">AI-powered meal suggestions for everyone</p>
+                    </div>
+                    <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-6">
+                        <div class="text-4xl mb-3">📱</div>
+                        <h4 class="text-lg font-semibold text-white mb-2">Easy to Use</h4>
+                        <p class="text-blue-100">Simple and intuitive interface</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        
+        // DOM elements
+        const registerForm = document.getElementById('registerForm');
+        const backBtn = document.getElementById('backBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const errorText = document.getElementById('errorText');
+        const successText = document.getElementById('successText');
+        const userIdInput = document.getElementById('userId');
+        const confirmUserIdInput = document.getElementById('confirmUserId');
+        const userNameInput = document.getElementById('userName');
+
+        // Hide messages
+        function hideMessages() {
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        // Show error message
+        function showError(message) {
+            hideMessages();
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            errorMessage.classList.add('shake');
+            setTimeout(() => errorMessage.classList.remove('shake'), 500);
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            hideMessages();
+            successText.textContent = message;
+            successMessage.classList.remove('hidden');
+        }
+
+        // Validate form
+        function validateForm() {
+            const userId = userIdInput.value.trim();
+            const confirmUserId = confirmUserIdInput.value.trim();
+            const userName = userNameInput.value.trim();
+
+            if (!userId) {
+                showError('Please enter your User ID');
+                userIdInput.focus();
+                return false;
+            }
+
+            if (!confirmUserId) {
+                showError('Please confirm your User ID');
+                confirmUserIdInput.focus();
+                return false;
+            }
+
+            if (userId !== confirmUserId) {
+                showError('User IDs do not match. Please check and try again.');
+                confirmUserIdInput.focus();
+                return false;
+            }
+
+            if (!userName) {
+                showError('Please enter your display name');
+                userNameInput.focus();
+                return false;
+            }
+
+            if (userId.length < 3) {
+                showError('User ID must be at least 3 characters long');
+                userIdInput.focus();
+                return false;
+            }
+
+            if (userName.length < 2) {
+                showError('Display name must be at least 2 characters long');
+                userNameInput.focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        // Register form submission
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessages();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const userId = userIdInput.value.trim();
+            const userName = userNameInput.value.trim();
+
+            try {
+                const response = await fetch(`${API_BASE}/user/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        user_name: userName,
+                        user_pass: 'defaultpassword' // Use default password (letters and numbers only)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Registration successful, save user info to sessionStorage with tab-specific key
+                    const userData = {
+                        user_id: userId,
+                        user_name: userName,
+                        joined: []
+                    };
+                    sessionStorage.setItem(getTabKey('currentUser'), JSON.stringify(userData));
+                    console.log('Saved user data with tab key:', getTabKey('currentUser'), userData);
+                    
+                    showSuccess('Registration successful! Welcome to Meal Planner!');
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 2000);
+                } else {
+                    if (response.status === 400 && data.detail && data.detail.includes('already exist')) {
+                        showError('User ID already exists. Please choose a different one.');
+                    } else {
+                        showError(data.detail || 'Registration failed. Please try again.');
+                    }
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Network error. Please check your connection and try again.');
+            }
+        });
+
+        // Back button click
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        // Auto-fill User ID from URL parameter
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            if (userId) {
+                userIdInput.value = userId;
+                confirmUserIdInput.value = userId;
+                userNameInput.focus();
+            } else {
+                userIdInput.focus();
+            }
+        });
+
+        // Real-time validation
+        confirmUserIdInput.addEventListener('input', () => {
+            const userId = userIdInput.value.trim();
+            const confirmUserId = confirmUserIdInput.value.trim();
+            
+            if (confirmUserId && userId !== confirmUserId) {
+                confirmUserIdInput.classList.add('border-red-300');
+                confirmUserIdInput.classList.remove('border-gray-300');
+            } else {
+                confirmUserIdInput.classList.remove('border-red-300');
+                confirmUserIdInput.classList.add('border-gray-300');
+            }
+        });
+
+        // Pencil icon click handlers
+        document.querySelectorAll('.pencil-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                const input = e.target.parentElement.querySelector('input');
+                input.focus();
+                input.select();
+            });
+        });
+    </script>
+</body>
+</html>

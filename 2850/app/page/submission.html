@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Submission</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-item {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        input[type="date"] {
+          direction: ltr;
+          text-align: left;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+          color: #000;
+        }
+
+        input[disabled],
+        input[readonly],
+        select[disabled],
+        textarea[readonly],
+        input[type="date"][disabled],
+        input[type="date"][readonly] {
+          background-color: #f3f4f6; /* Tailwind gray-100 */
+          color: #6b7280;            /* gray-600 */
+          cursor: not-allowed;
+        }
+
+        /* Indicator màu nhẹ hơn 1 chút (tuỳ chọn) */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          filter: invert(0.5);
+        }
+
+        input[type="date"]::-webkit-datetime-edit {
+            color: #000;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            color: #000;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-text {
+            color: #000;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-month-field {
+            color: #000;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-day-field {
+            color: #000;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-year-field {
+            color: #000;
+        }
+
+        input[type="datetime-local"] {
+            direction: ltr;
+            text-align: left;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: white;
+        }
+        .form-checkbox {
+            margin-right: 8px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .hidden {
+            display: none;
+        }
+        .cooking-role-btn {
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .cooking-role-btn:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .cooking-role-btn.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+        .cooking-role-btn.selected:hover {
+            background: #dbeafe;
+        }
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .success-message {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .meal-code-section {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .family-selector {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        /* Loading state cho nút Generate plan */
+        .btn-success.loading {
+          background-color: #86efac;   /* xanh lá nhạt hơn */
+          opacity: 0.7;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-4xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">🍽️ Meal Submission</h1>
+                <p class="text-xl text-blue-100">Share your preferences for the upcoming meal</p>
+            </div>
+
+            <!-- User Info Header -->
+            <div class="flex justify-between items-center mb-6 fade-in">
+                <div></div>
+                <div class="relative">
+                    <button id="userProfileBtn" class="flex items-center space-x-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-3 hover:bg-opacity-30 transition-all">
+                        <div class="w-10 h-10 bg-white bg-opacity-30 rounded-full flex items-center justify-center">
+                            <span id="userInitial" class="text-lg font-bold text-white">U</span>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-white font-semibold" id="userName">User</div>
+                            <div class="text-blue-100 text-xs" id="userRole">Member</div>
+                        </div>
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+
+                    <!-- User Dropdown -->
+                    <div id="userDropdown" class="dropdown-content">
+                        <a href="edit_profile.html" class="dropdown-item">
+                            <span class="mr-2">✏️</span>Edit Profile
+                        </a>
+                        <a href="manage_family.html" class="dropdown-item">
+                            <span class="mr-2">👨‍👩‍👧‍👦</span>Manage My Family
+                        </a>
+                        <a href="messages.html" class="dropdown-item">
+                            <span class="mr-2">💬</span>Messages
+                            <span id="messageCount" class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                        </a>
+                        <hr class="my-1">
+                        <a href="#" id="logoutBtn" class="dropdown-item text-red-600">
+                            <span class="mr-2">🚪</span>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Code Section (if joining via code) -->
+            <div id="mealCodeSection" class="meal-code-section hidden">
+                <h2 class="text-2xl font-bold mb-4">Joining via Meal Code</h2>
+                <div id="mealCodeInfo" class="text-lg">
+                    <!-- Meal code information will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Family Selection (if not joining via code) -->
+            <div id="familySelection" class="form-section">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Select Family</h2>
+                <div id="familyList" class="space-y-4">
+                    <!-- Family list will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Submission Form -->
+            <form id="submissionForm" class="space-y-6">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Basic Information</h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            <input type="text" id="username" class="form-input" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Participant Count</label>
+                            <input type="number" id="participantCount" class="form-input" min="1" max="20">
+                            <small class="text-gray-500">Only family holders can modify this</small>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Date <span class="text-red-500">*</span></label>
+                            <input type="date" id="mealDate" class="form-input" lang="en" data-format="YYYY-MM-DD" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Meal Type <span class="text-red-500">*</span></label>
+                            <select id="mealType" class="form-select" required>
+                                <option value="">Select meal type</option>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cooking Preferences -->
+                <div class="form-section">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Cooking Preferences</h2>
+
+                    <div class="form-group">
+                        <label class="form-label mb-4">Select your cooking roles (you can choose multiple):</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button type="button" id="preWorkBtn" class="cooking-role-btn" data-role="pre_work">
+                                <div class="text-2xl mb-2">🛒</div>
+                                <div class="font-semibold">Pre Work</div>
+                                <div class="text-sm text-gray-600">Shopping & Prep</div>
+                            </button>
+                            <button type="button" id="chefBtn" class="cooking-role-btn" data-role="chef">
+                                <div class="text-2xl mb-2">👨‍🍳</div>
+                                <div class="font-semibold">Chef</div>
+                                <div class="text-sm text-gray-600">Cooking</div>
+                            </button>
+                            <button type="button" id="afterWorkBtn" class="cooking-role-btn" data-role="after_work">
+                                <div class="text-2xl mb-2">🧹</div>
+                                <div class="font-semibold">After Work</div>
+                                <div class="text-sm text-gray-600">Cleanup</div>
+                            </button>
+                            <div class="mt-4 flex items-center gap-3">
+                              <button type="button" id="savePrefBtn" class="btn btn-success">
+                                💾 Save
+                              </button>
+                              <span id="savePrefStatus" class="text-sm text-gray-600">
+                                Not saved yet
+                              </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+<!--                &lt;!&ndash; Food Preferences &ndash;&gt;-->
+<!--                <div class="form-section">-->
+<!--                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Food Preferences</h2>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label class="form-label">Food Style</label>-->
+<!--                        <select id="foodStyle" class="form-select">-->
+<!--                            <option value="">Select food style (optional)</option>-->
+<!--                            <option value="chinese">Chinese</option>-->
+<!--                            <option value="western">Western</option>-->
+<!--                            <option value="french">French</option>-->
+<!--                            <option value="korean">Korean</option>-->
+<!--                            <option value="japanese">Japanese</option>-->
+<!--                            <option value="italian">Italian</option>-->
+<!--                            <option value="mexican">Mexican</option>-->
+<!--                            <option value="indian">Indian</option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label class="form-label">Liked Tastes</label>-->
+<!--                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">-->
+<!--                            <label class="flex items-center">-->
+<!--                                <input type="checkbox" value="sweet" class="form-checkbox mr-2 liked-taste">-->
+<!--                                Sweet-->
+<!--                            </label>-->
+<!--                            <label class="flex items-center">-->
+<!--                                <input type="checkbox" value="sour" class="form-checkbox mr-2 liked-taste">-->
+<!--                                Sour-->
+<!--                            </label>-->
+<!--                            <label class="flex items-center">-->
+<!--                                <input type="checkbox" value="spicy" class="form-checkbox mr-2 liked-taste">-->
+<!--                                Spicy-->
+<!--                            </label>-->
+<!--                            <label class="flex items-center">-->
+<!--                                <input type="checkbox" value="salty" class="form-checkbox mr-2 liked-taste">-->
+<!--                                Salty-->
+<!--                            </label>-->
+<!--                        </div>-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label class="form-label">Allergies</label>-->
+<!--                        <input type="text" id="allergies" class="form-input" placeholder="List any allergies (optional)">-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label class="form-label">Additional Remarks</label>-->
+<!--                        <textarea id="remarks" class="form-input" rows="4" placeholder="Any specific requests or notes (optional)"></textarea>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+                <!-- === Spin Wheel (Nominate up to 2 dishes) === -->
+                <div class="form-section" id="wheelSection">
+                  <h2 class="text-2xl font-bold text-gray-800 mb-2">Dish Wheel</h2>
+                  <p class="text-gray-600 mb-4">Nominate up to <strong>2 dishes</strong>. Each nomination counts as one vote. Wheel sectors scale with total votes across your family for this date & meal.</p>
+
+                  <!-- Nomination inputs -->
+                  <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <input id="dishNom1" class="form-input" placeholder="Dish nomination #1 (optional)">
+                    <input id="dishNom2" class="form-input" placeholder="Dish nomination #2 (optional)">
+                  </div>
+                  <div class="flex gap-3 mb-6">
+                    <button type="button" id="saveNominationsBtn" class="btn btn-primary">Save My Nominations</button>
+                    <span id="nominationHint" class="text-sm text-gray-500"></span>
+                  </div>
+
+                  <!-- Candidates & votes -->
+                  <div class="grid md:grid-cols-2 gap-6 items-start">
+                    <div>
+                      <h3 class="font-semibold text-gray-800 mb-2">Current candidates</h3>
+                      <ul id="candidateList" class="space-y-2 text-sm"></ul>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                      <canvas id="wheelCanvas" width="320" height="320" class="mb-4"></canvas>
+                      <button type="button" id="spinBtn" class="btn btn-success">🎯 Spin</button>
+                      <div id="spinResult" class="mt-3 text-center text-lg font-semibold text-gray-800"></div>
+                    </div>
+                  </div>
+
+                  <!-- Suggestions & generate (SPLIT VIEW) -->
+                  <div id="suggestionsBlock" class="mt-6 hidden">
+                    <!-- 1) Picked on the wheel -->
+                    <div id="pickedBlock" class="mb-6">
+                      <div class="text-sm text-gray-500 mb-2">Generate plan for wheel result</div>
+                      <div id="pickedCard"></div>
+                    </div>
+
+<!--                    &lt;!&ndash; 2) AI alternatives &ndash;&gt;-->
+<!--                    <div id="aiBlock">-->
+<!--                      <div class="flex items-baseline justify-between mb-2">-->
+<!--                        <div class="text-sm text-gray-500">-->
+<!--                          AI alternatives for “<span id="pickedName" class="font-medium text-gray-700">—</span>” (3 items)-->
+<!--                        </div>-->
+<!--                       &lt;!&ndash; (tuỳ chọn) nút refresh &ndash;&gt;-->
+<!--                       &lt;!&ndash; <button id="refreshSuggestBtn" type="button" class="text-xs px-3 py-1 rounded border hover:bg-gray-50">Refresh</button> &ndash;&gt;-->
+<!--                      </div>-->
+<!--                      <div id="aiCards" class="grid md:grid-cols-3 gap-4"></div>-->
+<!--                     </div>-->
+<!--                  </div>-->
+                </div>
+
+                <!-- Messages -->
+                <div id="errorMessage" class="error-message hidden">
+                    <span id="errorText"></span>
+                </div>
+
+                <div id="successMessage" class="success-message hidden">
+                    <span id="successText"></span>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex">
+                  <button type="button" id="backBtn" class="btn btn-secondary">
+                      Back to Home
+                  </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script src="js/auth.js"></script>
+<script>
+// ---- Kill legacy calls just on submission.html (no plans list here)
+const __origFetch = window.fetch;
+window.fetch = function(input, init) {
+  try {
+    const url = (typeof input === 'string') ? input : (input && input.url) || '';
+    // 1) Chặn /api/plans?family_id=all (route cũ)
+    if (/\/api\/plans(\?|$)/.test(url)) {
+      return Promise.resolve(new Response('[]', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }));
+    }
+  } catch (_) {}
+  return __origFetch(input, init);
+};
+
+window.checkSubmissionsForSelectedSlot = function noop() { /* no-op in wheel-first flow */ };
+
+// Ensure /api prefix exactly once for family routes
+function apiFamily(path) {
+  const base = (typeof API_BASE === 'string' && API_BASE.length) ? API_BASE : '';
+  if (base.endsWith('/api')) return `${base}/family${path}`;
+  if (base.includes('/api/')) return `${base.replace(/\/+$/,'')}/family${path}`;
+  return `${base.replace(/\/+$/,'')}/api/family${path}`;
+}
+
+/* =============================
+   Auth & shared state
+============================= */
+let currentUser = null;
+let selectedFamily = null;
+let mealCodeData = null;
+let userFamilies = [];
+
+/* =============================
+   Wheel state (server-backed)
+============================= */
+let wheelState = {
+  candidates: [],
+  user_summary: null
+};
+
+/* =============================
+   Wheel colors
+============================= */
+const WHEEL_COLORS = [
+  '#f0592b','#e89d2e','#8bc34a','#4fc3f7','#ab47bc',
+  '#ff7043','#66bb6a','#26c6da','#ffa726','#29b6f6'
+];
+const BASE_WEIGHT = 1;
+
+/* =============================
+   Helpers
+============================= */
+const $ = (sel)=>document.querySelector(sel);
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+function showError(msg){ hideMessages(); $('#errorText').textContent=msg; $('#errorMessage').classList.remove('hidden'); }
+function showSuccess(msg){ hideMessages(); $('#successText').textContent=msg; $('#successMessage').classList.remove('hidden'); }
+function hideMessages(){ $('#errorMessage').classList.add('hidden'); $('#successMessage').classList.add('hidden'); }
+async function fetchJSON(url, opts={}) {
+  const r = await fetch(url, {headers:{'Content-Type':'application/json'}, ...opts});
+  let data = null;
+  try { data = await r.json(); } catch(_) { data = {}; }
+  if(!r.ok) throw new Error(data.detail || data.message || ('HTTP '+r.status));
+  return data;
+}
+
+// --- Restore roles from localStorage for current user ---
+function restoreRolesFromLocal() {
+  try {
+    const key = `mp_roles_${currentUser.user_id}`;
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
+
+    // clear current UI
+    document.querySelectorAll('.cooking-role-btn').forEach(b => b.classList.remove('selected'));
+
+    if (Array.isArray(saved) && saved.length) {
+      if (saved.includes('chef'))       document.getElementById('chefBtn').classList.add('selected');
+      if (saved.includes('pre_work'))   document.getElementById('preWorkBtn').classList.add('selected');
+      if (saved.includes('after_work')) document.getElementById('afterWorkBtn').classList.add('selected');
+      return true;   // đã khôi phục được
+    }
+  } catch {}
+  return false;      // không có gì để khôi phục
+}
+
+// --- Persist current roles to localStorage (used on beforeunload) ---
+function persistRolesToLocal() {
+  try {
+    const key = `mp_roles_${currentUser?.user_id}`;
+    if (!key) return;
+    const roles = Array.from(document.querySelectorAll('.cooking-role-btn.selected'))
+      .map(b => b.dataset.role);
+    localStorage.setItem(key, JSON.stringify(roles));
+  } catch {}
+}
+
+/* =============================
+   Date input helpers
+============================= */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type="date"]').forEach(input=>{
+    input.setAttribute('lang','en');
+    input.style.direction='ltr';
+    input.style.textAlign='left';
+    input.addEventListener('change', function(){
+      if(!this.value) return;
+      const d=new Date(this.value);
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+      this.value = `${y}-${m}-${da}`;
+    });
+  });
+});
+setInterval(()=>document.querySelectorAll('input[type="date"]').forEach(i=>i.setAttribute('lang','en-US')), 1000);
+
+/* =============================
+   Init auth
+============================= */
+window.addEventListener('load', async () => {
+  initAuth(
+    async (user) => {
+      currentUser = user;
+      updateUserInfo();
+      restoreRolesFromLocal();
+      await loadUserData();
+      setupEventListeners();
+      loadLastSubmission();
+      ensureSingleNominateRow();
+      attachWheelUI();
+    },
+    () => { window.location.href = 'index.html'; }
+  );
+});
+
+(function removeParticipantCountField(){
+  const pc = document.getElementById('participantCount');
+  if (pc) {
+    const wrap = pc.closest('.form-group') || pc;
+    wrap.remove();
+  }
+})();
+
+function updateUserInfo(){
+  if(!currentUser) return;
+  $('#userName').textContent = currentUser.user_name;
+  $('#userInitial').textContent = currentUser.user_name.charAt(0).toUpperCase();
+}
+
+/* =============================
+   User & family
+============================= */
+async function loadUserData(){
+  try{
+    const un = $('#username');
+    un.value = currentUser.user_name; un.readOnly = true; un.classList.add('bg-gray-100');
+
+    const res = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+    if(res.ok){
+      userFamilies = await res.json();
+      if(userFamilies.length===1){
+        selectedFamily = userFamilies[0];
+        displayFamilyList();
+        const el = document.querySelector(`.family-selector[data-family-id="${selectedFamily.family_id}"]`);
+        selectFamily(selectedFamily.family_id, el);
+        $('#familySelection').classList.add('hidden');
+      }else{
+        displayFamilyList();
+        $('#familySelection').classList.remove('hidden');
+      }
+    }
+
+    const params = new URLSearchParams(location.search);
+    const code = params.get('mealCode');
+    if(code) await loadMealCode(code);
+  }catch(err){ console.error(err); }
+}
+async function loadMealCode(mealCode){
+  try{
+    const data = await fetchJSON(`${API_BASE}/meal-code/${mealCode}`);
+    mealCodeData = data;
+    $('#mealCodeSection').classList.remove('hidden');
+    $('#mealCodeInfo').innerHTML = `
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-blue-800 mb-2">Meal Information</h3>
+        <p><strong>Family:</strong> ${data.family_name}</p>
+        <p><strong>Date:</strong> ${data.meal_date}</p>
+        <p><strong>Meal Type:</strong> ${data.meal_type}</p>
+        <p><strong>Expected Participants:</strong> ${data.participant_count}</p>
+      </div>`;
+    $('#familySelection').classList.add('hidden');
+    ['mealDate','mealType','participantCount','username'].forEach(id=>{
+      const el=$( '#'+id );
+      if(id==='mealDate') el.value=data.meal_date;
+      if(id==='mealType') el.value=data.meal_type;
+      if(id==='participantCount') el.value=data.participant_count;
+      el.readOnly=true; el.classList.add('bg-gray-100');
+    });
+  }catch(err){ showError('Error loading meal code.'); }
+}
+function displayFamilyList(){
+  const wrap=$('#familyList');
+  if(userFamilies.length===0){ wrap.innerHTML='<p class="text-gray-500">You are not a member of any families yet.</p>'; return; }
+  wrap.innerHTML = userFamilies.map(f=>`
+    <div class="family-selector cursor-pointer" data-family-id="${f.family_id}">
+      <h3 class="font-semibold text-lg">${f.family_name}</h3>
+      <p class="text-gray-600">Family ID: ${f.family_id}</p>
+      <p class="text-sm text-gray-500">Role: ${f.role}</p>
+    </div>`).join('');
+  wrap.querySelectorAll('.family-selector').forEach(el=>{
+    el.addEventListener('click', ()=>selectFamily(el.dataset.familyId, el));
+  });
+  if(userFamilies.length===1){
+    const only=userFamilies[0]; const el=document.querySelector('.family-selector');
+    selectFamily(only.family_id, el);
+  }
+}
+
+function selectFamily(familyId, el){
+  selectedFamily = userFamilies.find(f=>f.family_id===familyId);
+  document.querySelectorAll('.family-selector').forEach(s=>s.classList.remove('ring-2','ring-blue-500'));
+  if(el) el.classList.add('ring-2','ring-blue-500');
+
+  // const isHolder = selectedFamily.role==='holder';
+  // const pc = $('#participantCount');
+  // pc.readOnly = !isHolder;
+  // pc.classList.toggle('bg-gray-100', !isHolder);
+  //
+  // setDefaultParticipantCount(selectedFamily.family_id, isHolder);
+  // setDefaultDateAndMeal();
+  // updateSpinPermission();
+  // attachWheelUI();
+  startActiveMealSync().then(()=>{
+    updateSpinPermission();
+    attachWheelUI();
+  });
+}
+
+function updateSpinPermission() {
+  const isHolder = !!(selectedFamily && selectedFamily.role === 'holder');
+  const spinBtn = document.getElementById('spinBtn');
+  if (spinBtn) {
+    spinBtn.disabled = !isHolder;
+    spinBtn.classList.toggle('opacity-50', !isHolder);
+    spinBtn.classList.toggle('cursor-not-allowed', !isHolder);
+    spinBtn.title = isHolder ? '' : 'Only family holder can spin & generate';
+  }
+}
+
+/* =============================
+   Active Meal sync (holder sets, others follow)
+============================= */
+let activeMealPollTimer = null;
+
+function isHolder() {
+  return !!(selectedFamily && selectedFamily.role === 'holder');
+}
+
+function lockDateMealForNonHolder(disabled) {
+  const dateEl = document.getElementById('mealDate');
+  const typeEl = document.getElementById('mealType');
+  if (!dateEl || !typeEl) return;
+
+  // member: disabled + style; holder: enabled
+  [dateEl, typeEl].forEach(el => {
+    el.disabled = disabled;
+    el.readOnly = disabled; // ẩn bàn phím mobile
+    el.classList.toggle('bg-gray-100', disabled);
+    el.classList.toggle('cursor-not-allowed', disabled);
+    if (disabled) el.title = 'Only family holder can change this';
+    else el.removeAttribute('title');
+  });
+}
+
+async function fetchActiveMealOnce() {
+  if (!selectedFamily) return null;
+  try {
+    const r = await fetch(apiFamily(`/${selectedFamily.family_id}/active-meal`), { cache:'no-store' });
+    if (!r.ok) return null;
+    const data = await r.json();
+    if (data && data.meal_date && data.meal_type) return data;
+    return null;
+  } catch { return null; }
+}
+
+function applyActiveMealToInputs(meal_date, meal_type) {
+  const dateEl = document.getElementById('mealDate');
+  const typeEl = document.getElementById('mealType');
+  if (!dateEl || !typeEl) return;
+
+  const changed =
+    (dateEl.value !== meal_date) || (typeEl.value !== meal_type);
+
+  dateEl.value = meal_date;
+  typeEl.value = meal_type;
+
+  if (changed) {
+    ensureSingleNominateRow();
+    attachWheelUI(); // reload wheel state
+  }
+}
+
+async function pushActiveMealFromInputs() {
+  if (!isHolder() || !selectedFamily) return;
+  const dateEl = document.getElementById('mealDate');
+  const typeEl = document.getElementById('mealType');
+  const meal_date = dateEl.value;
+  const meal_type = typeEl.value;
+  if (!(meal_date && meal_type)) return;
+
+  try {
+    await fetch(apiFamily(`/${selectedFamily.family_id}/active-meal`), {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser.user_id,
+        meal_date,
+        meal_type
+      })
+    });
+  } catch (e) {
+    console.warn('Failed to set active meal:', e);
+  }
+}
+
+async function startActiveMealSync() {
+  // clear poll cũ
+  if (activeMealPollTimer) {
+    clearInterval(activeMealPollTimer);
+    activeMealPollTimer = null;
+  }
+
+  // holder: enable controls + đẩy state khi đổi
+  // member: disable + poll mỗi 4s
+  lockDateMealForNonHolder(!isHolder());
+
+  // Khi mới chọn family: nếu đã có active => nhập vào input ngay
+  const active = await fetchActiveMealOnce();
+  if (active) applyActiveMealToInputs(active.meal_date, active.meal_type);
+  else if (!isHolder()) {
+    // member nhưng chưa có active → default local rồi "đóng băng"
+    setDefaultDateAndMeal();
+  }
+
+  if (!isHolder()) {
+    // member: cứ 4s kéo active
+    activeMealPollTimer = setInterval(async () => {
+      const data = await fetchActiveMealOnce();
+      if (data) applyActiveMealToInputs(data.meal_date, data.meal_type);
+    }, 4000);
+  }
+}
+
+/* =============================
+   Member count helpers
+============================= */
+async function fetchFamilyMemberCount(familyId) {
+  // Thử lần lượt vài endpoint phổ biến; lấy cái nào có dữ liệu trước thì dùng
+  const tryPaths = [
+    `${API_BASE}/family/${familyId}/members`,     // trả về mảng members
+    `${API_BASE}/family/${familyId}`,             // trả về object có member_count hoặc members
+    `${API_BASE}/family/${familyId}/stats`,       // trả về { member_count: N }
+  ];
+
+  for (const url of tryPaths) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+
+      // 1) nếu là mảng: độ dài chính là member_count
+      if (Array.isArray(data)) return data.length;
+
+      // 2) nếu là object: tìm các field quen thuộc
+      if (typeof data === 'object' && data) {
+        if (Number.isFinite(data.member_count)) return data.member_count;
+        if (Array.isArray(data.members)) return data.members.length;
+        if (Array.isArray(data.data)) return data.data.length; // phòng trường hợp bọc trong {data:[]}
+        if (data.count && Number.isFinite(data.count)) return data.count;
+      }
+    } catch (_e) {
+      // thử endpoint tiếp theo
+    }
+  }
+  return null; // không lấy được
+}
+
+async function setDefaultParticipantCount(familyId, isHolder) {
+  const pc = document.getElementById('participantCount');
+  if (!pc) return;
+
+  // Chỉ set mặc định khi ô chưa có giá trị (tránh ghi đè khi người giữ nhà đã sửa tay)
+  if (pc.value && Number(pc.value) > 0) {
+    pc.readOnly = !isHolder;
+    pc.classList.toggle('bg-gray-100', !isHolder);
+    return;
+  }
+
+  const count = await fetchFamilyMemberCount(familyId);
+  if (Number.isFinite(count) && count > 0) {
+    pc.value = count;
+  }
+
+  // Áp quyền chỉnh sửa
+  pc.readOnly = !isHolder;
+  pc.classList.toggle('bg-gray-100', !isHolder);
+  pc.title = isHolder ? '' : 'Only family holders can modify this';
+}
+
+/* =============================
+   Default Date & Meal Type — for everyone
+   Rules:
+   - < 11:00  → today + lunch
+   - 11:00–16:59 → today + dinner
+   - ≥ 17:00  → tomorrow + breakfast
+   Notes:
+   - Do NOT override if user already filled date/type
+   - Do NOT override when joining via meal code (locked)
+============================= */
+function fmtDateYYYYMMDD(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function computeDefaultDateAndMeal(now = new Date()) {
+  const hour = now.getHours();
+  if (hour < 11) {
+    return { date: fmtDateYYYYMMDD(now), meal: 'lunch' };
+  }
+  if (hour < 17) {
+    return { date: fmtDateYYYYMMDD(now), meal: 'dinner' };
+  }
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  return { date: fmtDateYYYYMMDD(tomorrow), meal: 'breakfast' };
+}
+
+function setDefaultDateAndMeal() {
+  // Nếu đang vào bằng meal code thì đã bị khoá → không tự set
+  if (mealCodeData) return;
+
+  const dateEl = document.getElementById('mealDate');
+  const typeEl = document.getElementById('mealType');
+  if (!dateEl || !typeEl) return;
+
+  const hasDate = !!dateEl.value;
+  const hasType = !!typeEl.value;
+  if (hasDate && hasType) return; // user đã chọn → giữ nguyên
+
+  const { date, meal } = computeDefaultDateAndMeal(new Date());
+  if (!hasDate) dateEl.value = date;
+  if (!hasType) typeEl.value = meal;
+
+  // đồng bộ UI wheel theo giá trị mới
+  ensureSingleNominateRow();
+  attachWheelUI();
+}
+
+/* =============================
+   Prefill last submission
+============================= */
+async function loadLastSubmission(){
+  try{
+    const r = await fetch(`${API_BASE}/submissions/my?family_id=all&user_id=${currentUser.user_id}&limit=1`);
+    if(r.ok){
+      const arr = await r.json();
+      if(arr.length>0) prefillForm(arr[0]);
+    }
+  }catch(err){ console.error(err); }
+}
+
+function prefillForm(sub){
+  // Giữ tối thiểu: chỉ prefill vai trò nấu nướng
+  // const p = sub.preferences || {};
+  // $('#username').value = currentUser.user_name;
+  // if (p.is_chef)   $('#chefBtn').classList.add('selected');
+  // if (p.pre_work)  $('#preWorkBtn').classList.add('selected');
+  // if (p.after_work)$('#afterWorkBtn').classList.add('selected');
+    $('#username').value = currentUser.user_name;
+    if (restoreRolesFromLocal()) return;
+  // 1) thử localStorage theo user
+  try {
+    const key = `mp_roles_${currentUser.user_id}`;
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
+    if (Array.isArray(saved) && saved.length) {
+      if (saved.includes('chef'))      $('#chefBtn').classList.add('selected');
+      if (saved.includes('pre_work'))  $('#preWorkBtn').classList.add('selected');
+      if (saved.includes('after_work'))$('#afterWorkBtn').classList.add('selected');
+      return;
+    }
+  } catch {}
+  // 2) fallback theo submission gần nhất
+  const p = sub.preferences || {};
+  if (p.is_chef)    $('#chefBtn').classList.add('selected');
+  if (p.pre_work)   $('#preWorkBtn').classList.add('selected');
+  if (p.after_work) $('#afterWorkBtn').classList.add('selected');
+}
+
+/* =============================
+   Form & header events
+============================= */
+function setupEventListeners() {
+    // (ĐÃ BỎ) $('#submissionForm').addEventListener('submit', handleSubmit);
+    $('#backBtn').addEventListener('click', () => window.location.href = 'home.html');
+
+    $('#userProfileBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        $('#userDropdown').classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+        if (!$('#userProfileBtn').contains(e.target)) $('#userDropdown').classList.remove('show');
+    });
+    $('#logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+    });
+
+    $('#mealDate').addEventListener('change', () => {
+        // ensureSingleNominateRow();
+        // attachWheelUI();
+        if (isHolder()) { pushActiveMealFromInputs(); }
+        ensureSingleNominateRow();
+        attachWheelUI();
+    });
+    $('#mealType').addEventListener('change', () => {
+        // ensureSingleNominateRow();
+        // attachWheelUI();
+        if (isHolder()) { pushActiveMealFromInputs(); }
+        ensureSingleNominateRow();
+        attachWheelUI();
+    });
+
+    document.querySelectorAll('.cooking-role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // toggle UI
+        btn.classList.toggle('selected');
+
+        // LƯU ngay sau mỗi lần người dùng bấm
+        try {
+          const key = `mp_roles_${currentUser.user_id}`;
+          const roles = Array.from(document.querySelectorAll('.cooking-role-btn.selected'))
+            .map(b => b.dataset.role);
+          localStorage.setItem(key, JSON.stringify(roles));
+        } catch {}
+      });
+    });
+
+    // 3.1) Gắn sự kiện cho nút Save
+    const saveBtn = document.getElementById('savePrefBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', saveCookingPreference);
+    }
+
+    // 3.2) Đánh dấu dirty mỗi khi người dùng đổi lựa chọn
+    document.querySelectorAll('.cooking-role-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        prefDirty = true;
+        const statusEl = document.getElementById('savePrefStatus');
+        if (statusEl) {
+          statusEl.textContent = 'Unsaved changes';
+          statusEl.classList.remove('text-green-700');
+          statusEl.classList.add('text-red-600');
+        }
+      });
+    });
+}
+
+/* =============================
+   Cooking preference save
+============================= */
+let prefDirty = false;        // true khi user bấm/toggle vai trò
+let lastPrefSavedAt = null;   // thời điểm đã lưu gần nhất (hiển thị)
+
+function getCurrentCookingPref() {
+  const selected = Array.from(document.querySelectorAll('.cooking-role-btn.selected'))
+    .map(b => b.dataset.role);
+  // Chuẩn hóa về cấu trúc BE hiểu
+  const isChef    = selected.includes('chef');
+  const before_t  = selected.includes('pre_work')  ? 'pre_work'  : 'none';
+  const after_t   = selected.includes('after_work')? 'after_work': 'none';
+  const tasks     = [];
+  if (before_t !== 'none') tasks.push('pre_work');
+  if (after_t  !== 'none') tasks.push('after_work');
+
+  // Nếu bạn đã mở rộng SQL có meal_date/display_name → gửi kèm trong preference
+  return {
+    is_chef: isChef,
+    before_task: before_t,
+    after_task: after_t,
+    tasks: tasks,
+    // meta giúp backend có thể upsert bản ghi theo ngày (nếu đã hỗ trợ)
+    meal_date: document.getElementById('mealDate')?.value || null,
+    display_name: currentUser?.user_name || '',
+    role: selectedFamily?.role || 'member'
+  };
+}
+
+async function saveCookingPreference() {
+  hideMessages();
+  if (!selectedFamily) {
+    showError('Please select a family before saving preferences.');
+    return;
+  }
+  const pref = getCurrentCookingPref();
+
+  try {
+    // Route backend có sẵn: POST /api/preferences/save
+    // body: { family_id, user_id, preference: {...} }
+    const res = await fetch(`${API_BASE}/preferences/save`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        family_id: selectedFamily.family_id,
+        user_id:   currentUser.user_id,
+        preference: pref
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.detail || err.message || `HTTP ${res.status}`);
+    }
+
+    prefDirty = false;
+    lastPrefSavedAt = new Date();
+    const statusEl = document.getElementById('savePrefStatus');
+    if (statusEl) {
+      statusEl.textContent = `Saved ✓ (${lastPrefSavedAt.toLocaleTimeString()})`;
+      statusEl.classList.remove('text-gray-600');
+      statusEl.classList.add('text-green-700');
+    }
+    showSuccess('Cooking preference saved successfully.');
+  } catch (e) {
+    console.error('save preference failed:', e);
+    showError(e.message || 'Failed to save cooking preference.');
+  }
+}
+
+/* =============================
+   Submit preferences
+============================= */
+async function handleSubmit(e){
+  e.preventDefault(); hideMessages();
+  if(!selectedFamily){ showError('Please select a family.'); return; }
+  const formData = collectFormData();
+  try{
+    await fetchJSON(`${API_BASE}/submissions/submit`, {
+      method:'POST', body:JSON.stringify(formData)
+    });
+    showSuccess('Preferences submitted successfully!');
+    setTimeout(()=>window.location.href='home.html', 1200);
+  }catch(err){ showError(err.message); }
+}
+function collectFormData(){
+  const selectedRoles = Array.from(document.querySelectorAll('.cooking-role-btn.selected')).map(b=>b.dataset.role);
+  const prefs = {
+    is_chef: selectedRoles.includes('chef'),
+    pre_work: selectedRoles.includes('pre_work'),
+    after_work: selectedRoles.includes('after_work'),
+    food_style: $('#foodStyle').value,
+    liked_tastes: Array.from(document.querySelectorAll('.liked-taste:checked')).map(cb=>cb.value),
+    allergies: $('#allergies').value
+  };
+  const pc = parseInt($('#participantCount')?.value)||1;
+  return {
+    family_id: selectedFamily.family_id,
+    user_id: currentUser.user_id,
+    role: selectedFamily ? selectedFamily.role : 'member',
+    display_name: currentUser.user_name,
+    age: null,
+    meal_date: $('#mealDate').value,
+    meal_type: $('#mealType').value,
+    preferences: prefs,
+    drinks: '',
+    remark: $('#remarks').value,
+    participant_count: pc
+  };
+}
+
+/* ===================================================================
+   WHEEL — 1 input + Add, tối đa 2 món/người, không tự vote,
+   diện tích theo (BASE_WEIGHT + votes); dữ liệu LƯU DB qua API.
+=================================================================== */
+let spinning=false, spinRAF=0;
+
+function ensureSingleNominateRow(){
+  const sec = $('#wheelSection');
+  if(!sec) return;
+
+  const nomGrid = $('#dishNom1')?.closest('.grid');
+  if(nomGrid) nomGrid.style.display='none';
+  const saveWrap = $('#saveNominationsBtn')?.closest('div');
+  if(saveWrap) saveWrap.style.display='none';
+
+  if(!$('#singleNominateRow')){
+    const row = document.createElement('div');
+    row.id='singleNominateRow';
+    row.className='flex gap-3 mb-6';
+    row.innerHTML = `
+      <input id="singleDishInput" class="form-input flex-1" placeholder="Add your dish (max 2 for this time)">
+      <button id="addDishBtn" type="button" class="btn btn-primary">Add</button>`;
+    const p = sec.querySelector('p');
+    if(p && p.nextSibling) sec.insertBefore(row, p.nextSibling);
+    else sec.prepend(row);
+
+    $('#addDishBtn').addEventListener('click', addDishFromInput);
+    $('#singleDishInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') addDishFromInput(); });
+  }
+}
+
+/* Load state từ server */
+async function loadWheelState(){
+  const date=$('#mealDate').value, type=$('#mealType').value;
+  if(!(selectedFamily && date && type)){ renderWheelEmpty('Select family, date and meal type first.'); return; }
+  try{
+    const q = new URLSearchParams({
+      family_id: selectedFamily.family_id,
+      meal_date: date,
+      meal_type: type,
+      user_id: currentUser.user_id
+    }).toString();
+    const data = await fetchJSON(`${API_BASE}/wheel/state?${q}`);
+    wheelState = data;
+    renderWheel();
+  }catch(err){
+    console.error(err);
+    renderWheelEmpty('Unable to load wheel state.');
+  }
+}
+
+function attachWheelUI(){
+  ensureSingleNominateRow();
+
+  const spinBtn = $('#spinBtn');
+  if (spinBtn && !spinBtn.dataset.bound){
+    spinBtn.dataset.bound = '1';
+    spinBtn.addEventListener('click', startSpin);
+
+    // chỉ thêm Stop nếu holder
+    // if (selectedFamily?.role === 'holder') {
+    //   const stopBtn = document.createElement('button');
+    //   stopBtn.type = 'button';
+    //   stopBtn.className = 'btn btn-secondary ml-3';
+    //   // stopBtn.textContent = 'Stop';
+    //   stopBtn.addEventListener('click', (e)=>{
+    //     e.preventDefault();
+    //     if(spinning) cancelAnimationFrame(spinRAF);
+    //     spinning=false;
+    //   });
+    //   spinBtn.parentElement.appendChild(stopBtn);
+    // }
+  }
+
+  updateSpinPermission();
+  loadWheelState();
+  // Hide any legacy warning banner (if present)
+  document.querySelectorAll('#noSubmissionsBanner, .legacy-submission-warning')
+  .forEach(el => el.remove());
+
+}
+
+/* Thêm món (max 2/ người) */
+async function addDishFromInput(){
+  const dish = ($('#singleDishInput')?.value||'').trim();
+  if(!dish) return showError('Please input a dish.');
+  if(!selectedFamily) return showError('Please select a family.');
+  const date=$('#mealDate').value, type=$('#mealType').value;
+  if(!(date && type)) return showError('Please select date & meal type.');
+
+  try{
+    await fetchJSON(`${API_BASE}/wheel/nominate`, {
+      method:'POST',
+      body: JSON.stringify({
+        family_id: selectedFamily.family_id,
+        meal_date: date,
+        meal_type: type,
+        user_id: currentUser.user_id,
+        dish
+      })
+    });
+    $('#singleDishInput').value='';
+    await loadWheelState();
+  }catch(err){ showError(err.message); }
+}
+
+/* Vote/Unvote (server toggle) */
+async function toggleVote(candidateId){
+  const date=$('#mealDate').value, type=$('#mealType').value;
+  try{
+    const cid = Number(candidateId); // luôn là số
+    const payload = {
+      family_id: selectedFamily.family_id,
+      meal_date: date,
+      meal_type: type,
+      user_id: currentUser.user_id,
+      candidate_id: cid
+    };
+    // Gửi thêm các alias để tương thích backend
+    payload.candidateId = cid;
+    payload.id = cid;
+
+    await fetchJSON(`${API_BASE}/wheel/vote`, {
+      method:'POST',
+      body: JSON.stringify(payload)
+    });
+    await loadWheelState();
+  }catch(err){ showError(err.message); }
+}
+
+/* Edit/Delete món (chỉ chủ món) */
+async function editNomination(candidateId){
+  const newName = prompt('Edit your dish name:'); if(!newName) return;
+  try{
+    await fetchJSON(`${API_BASE}/wheel/candidate/${candidateId}`, {
+      method:'PUT',
+      body: JSON.stringify({ user_id: currentUser.user_id, name: newName.trim() })
+    });
+    await loadWheelState();
+  }catch(err){ showError(err.message); }
+}
+async function deleteNomination(candidateId){
+  if(!confirm('Delete this dish?')) return;
+  try{
+    await fetchJSON(`${API_BASE}/wheel/candidate/${candidateId}?user_id=${encodeURIComponent(currentUser.user_id)}`, {
+      method:'DELETE'
+    });
+    await loadWheelState();
+  }catch(err){ showError(err.message); }
+}
+
+/* ======= Render list & canvas ======= */
+function renderWheel(){
+  const you=currentUser.user_id;
+
+  const userSum = wheelState.user_summary || {ballots:0, votes_used:0, voted_candidate_ids:[]};
+  const ballotsLeft = Math.max(0, Number(userSum.ballots||0) - Number(userSum.votes_used||0));
+  const votedIdsSet = new Set((userSum.voted_candidate_ids||[]).map(String));
+
+  const list = $('#candidateList');
+  const cands = (wheelState.candidates||[]).slice().sort((a,b)=>(b.votes||0)-(a.votes||0));
+
+  const header = `
+    <div class="text-sm text-gray-600 mb-2">
+      <strong>Ballots left: ${ballotsLeft}</strong>
+      <span class="text-xs text-gray-400 ml-1">(you can’t vote your own dish)</span>
+    </div>`;
+  if(!cands.length){
+    list.innerHTML = header + `<li class="text-gray-400 text-sm">No candidates</li>`;
+    drawWheel([], 0); $('#spinResult').textContent=''; return;
+  }
+
+  list.innerHTML = header + cands.map(c=>{
+    const proposerId = c.proposer ?? c.proposer_user_id;
+    const mine = proposerId === you;
+
+    const iVoted =
+      votedIdsSet.has(String(c.id)) ||
+      (Array.isArray(c.voters) && c.voters.includes(you)) ||
+      (Array.isArray(c.voter_user_ids) && c.voter_user_ids.includes(you));
+
+    const canVote = (!mine && (ballotsLeft>0 || iVoted));
+    const btnText = iVoted ? 'Unvote' : 'Vote';
+
+    const badgeMine = mine
+      ? `<span class="ml-2 px-2 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">Your Dish</span>`
+      : '';
+    const badgeVoted = iVoted
+      ? `<span class="ml-2 px-2 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px]">Your vote</span>`
+      : '';
+
+    return `
+      <li class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+        <div class="flex-1">
+          <div class="font-medium">${escapeHtml(c.name)} ${badgeMine} ${badgeVoted}</div>
+          <div class="text-xs text-gray-500">by ${escapeHtml(c.proposer_name||'member')} · votes: ${c.votes||0}</div>
+        </div>
+        ${mine ? '' : `
+          <button type="button" class="px-2 py-1 text-xs rounded ${canVote?'bg-slate-200 hover:bg-slate-300':'bg-gray-200 text-gray-500 cursor-not-allowed'}"
+            ${canVote?'':'disabled'}
+            data-action="vote" data-id="${c.id}">${btnText}</button>
+        `}
+        ${mine ? `
+          <button type="button" class="px-2 py-1 text-xs rounded bg-white border hover:bg-gray-50" data-action="edit" data-id="${c.id}">Edit</button>
+          <button type="button" class="px-2 py-1 text-xs rounded bg-rose-500 text-white hover:bg-rose-600" data-action="del" data-id="${c.id}">Delete</button>
+        `:''}
+      </li>`;
+  }).join('');
+
+  list.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const id=btn.dataset.id, ac=btn.dataset.action;
+      if(ac==='vote') toggleVote(id);
+      if(ac==='edit') editNomination(id);
+      if(ac==='del') deleteNomination(id);
+    });
+  });
+
+  drawWheel(cands, 0);
+  $('#spinResult').textContent='';
+}
+function renderWheelEmpty(msg){
+  const list=$('#candidateList');
+  list.innerHTML = `<div class="text-sm text-gray-600 mb-2"><strong>Ballots left: 0</strong>
+    <span class="text-xs text-gray-400 ml-1">(you can’t vote your own dish)</span></div>
+    <li class="text-gray-400 text-sm">${msg}</li>`;
+  clearWheelCanvas();
+  $('#spinResult').textContent='';
+}
+
+/* =============================
+   Canvas drawing & spinning
+============================= */
+function clearWheelCanvas(){
+  const canvas=$('#wheelCanvas'); if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, canvas.width/2 - 10, 0, Math.PI*2);
+  ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=6; ctx.stroke();
+  ctx.font='14px system-ui,-apple-system, Segoe UI, Roboto'; ctx.fillStyle='#9ca3af';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('No candidates', canvas.width/2, canvas.height/2);
+}
+
+function drawSlices(cands, rotation){
+  const canvas=$('#wheelCanvas'); const ctx=canvas.getContext('2d');
+  ctx.save();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(rotation);
+  ctx.translate(-canvas.width/2, -canvas.height/2);
+
+  const weights = cands.map(c => (BASE_WEIGHT + (c.votes || 0)));
+  const totalWeight = weights.reduce((a,b)=>a+b,0) || 1;
+
+  const cx=canvas.width/2, cy=canvas.height/2, R=Math.min(cx,cy)-10;
+  let start = -Math.PI/2;
+
+  cands.forEach((c,idx)=>{
+    const portion = Math.max(0.0001, (weights[idx] / totalWeight));
+    const angle = portion * Math.PI*2;
+    const end = start + angle;
+
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,end); ctx.closePath();
+    ctx.fillStyle=WHEEL_COLORS[idx%WHEEL_COLORS.length]; ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='#ffffff'; ctx.stroke();
+
+    const mid=(start+end)/2, rx=cx+Math.cos(mid)*(R*0.65), ry=cy+Math.sin(mid)*(R*0.65);
+    ctx.save(); ctx.translate(rx,ry); ctx.rotate(mid + Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff'; ctx.font='bold 14px system-ui,-apple-system, Segoe UI, Roboto';
+    const txt = String(c.name).length>12?String(c.name).slice(0,12)+'…':String(c.name);
+    ctx.fillText(txt,0,0); ctx.restore();
+
+    start=end;
+  });
+  ctx.restore();
+}
+
+function drawPointer(){
+  const canvas=$('#wheelCanvas'); const ctx=canvas.getContext('2d');
+  const cx=canvas.width/2, cy=canvas.height/2, R=Math.min(cx,cy)-10;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - R);
+  ctx.lineTo(cx - 12, cy - R - 22);
+  ctx.lineTo(cx + 12, cy - R - 22);
+  ctx.closePath();
+  ctx.fillStyle='#111827';
+  ctx.fill();
+}
+
+function drawWheel(cands, rotation=0){
+  if(!$('#wheelCanvas')) return;
+  if(cands.length===0){ clearWheelCanvas(); return; }
+  drawSlices(cands, rotation);
+  drawPointer();
+}
+
+function startSpin(){
+  // Chỉ holder mới được spin
+  if (!(selectedFamily && selectedFamily.role === 'holder')) {
+    showError('Only the family holder can spin the wheel and generate a plan.');
+    return;
+  }
+  if (spinning) return;
+
+  const cands = (wheelState.candidates || []).slice();
+  if (cands.length === 0) {
+    showError('No candidates to spin.');
+    return;
+  }
+
+  // Xác suất theo trọng số (BASE_WEIGHT + votes)
+  const weights = cands.map(c => (BASE_WEIGHT + (c.votes || 0)));
+  const sum = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * sum, idx = 0;
+  for (let i = 0; i < cands.length; i++) {
+    if (r < weights[i]) { idx = i; break; }
+    r -= weights[i];
+  }
+
+  // Tính góc mục tiêu để kim chỉ vào sector trúng
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  const segments = [];
+  let start = -Math.PI / 2;
+  for (let i = 0; i < cands.length; i++) {
+    const ang = Math.max(0.0001, (weights[i] / totalWeight) * Math.PI * 2);
+    const end = start + ang;
+    segments.push({ mid: (start + end) / 2 });
+    start = end;
+  }
+  const mid = segments[idx].mid;
+  const pointerAngle = -Math.PI / 2;
+  const offset = normalizeAngle(pointerAngle - mid);
+  const targetRotation = (Math.PI * 2) * 4 + offset; // quay vài vòng cho “đã”
+
+  // Animate
+  const t0 = performance.now(), duration = 2500;
+  spinning = true;
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / duration);
+    const ease = 1 - Math.pow(1 - p, 3);
+    drawWheel(cands, ease * targetRotation);
+    if (p < 1 && spinning) {
+      spinRAF = requestAnimationFrame(step);
+    } else {
+      spinning = false;
+
+      // Kết quả
+      const pickedDish = cands[idx].name;
+      $('#spinResult').textContent = `Picked: ${pickedDish} (by ${cands[idx].proposer_name || 'member'})`;
+      showWheelSuggestions(pickedDish);
+      const sb = document.querySelector('#suggestionsBlock');
+      if (sb) sb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // ⬇️ LƯU WINNER ÂM THẦM VỀ BACKEND (không đổi UI)
+      (async () => {
+        try {
+          const date = document.getElementById('mealDate').value;
+          const type = document.getElementById('mealType').value;
+          await fetch(`${API_BASE}/wheel/pick`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              family_id: selectedFamily.family_id,
+              meal_date: date,
+              meal_type: type,
+              winner_name: pickedDish,
+              picked_by: currentUser.user_id
+            })
+          });
+        } catch (e) {
+          console.warn('Failed to persist wheel result:', e);
+        }
+      })();
+    }
+  };
+  spinRAF = requestAnimationFrame(step);
+}
+
+function normalizeAngle(a){ while(a<=-Math.PI) a+=Math.PI*2; while(a>Math.PI) a-=Math.PI*2; return a; }
+
+async function getLatestWinner(family_id, meal_date, meal_type) {
+  try {
+    const url = `${API_BASE}/wheel/picks/latest?family_id=${encodeURIComponent(family_id)}&meal_date=${encodeURIComponent(meal_date)}&meal_type=${encodeURIComponent(meal_type)}`;
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d && (d.winner_name || d.winner) ? (d.winner_name || d.winner) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// --- ADD: chuẩn hoá dữ liệu submission gửi BE ---
+function normalizeSubmissionForBE(s) {
+  const preferences = safeParseJSON(s.preferences);
+  // map liked_tastes -> likes (để BE luôn có 'likes')
+  if (!preferences.likes && Array.isArray(preferences.liked_tastes)) {
+    preferences.likes = preferences.liked_tastes;
+  }
+  return {
+    user_id: s.user_id || '',
+    role: s.role || 'member',
+    display_name: s.display_name || s.user_id || 'member',
+    preferences,
+    remark: s.remark || '',
+    drinks: s.drinks || '',
+    participant_count: s.participant_count ?? s.Participant_Count ?? 1
+  };
+}
+
+// --- ADD: headcount = tổng participant_count (fallback = số submissions) ---
+function computeHeadcountFromSubs(subs) {
+  let total = 0;
+  for (const s of subs || []) {
+    const pc = s.participant_count ?? s.Participant_Count ?? 1;
+    const n = parseInt(pc, 10);
+    total += Number.isFinite(n) && n > 0 ? n : 1;
+  }
+  return total || (subs ? subs.length : 1);
+}
+
+// --- ADD: generate từ submissions thật (kèm anchors/hard_lock) ---
+async function generatePlanFromSubs(winnerName /* string | null */) {
+  if (!(selectedFamily && selectedFamily.role === 'holder')) {
+    showError('Only the family holder can generate a plan.');
+    return;
+  }
+  if (!selectedFamily) { showError('Please select a family.'); return; }
+
+  const meal_date = document.getElementById('mealDate').value;
+  const meal_type = document.getElementById('mealType').value;
+  if (!(meal_date && meal_type)) {
+    showError('Please select date & meal type.');
+    return;
+  }
+
+  try {
+    // 1) tải submissions của family + ngày
+    const res = await fetch(`${API_BASE}/submissions/family/${encodeURIComponent(selectedFamily.family_id)}/at?meal_date=${encodeURIComponent(meal_date)}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(await res.text());
+    const all = await res.json();
+
+    // 2) lọc theo meal_type đang chọn
+    const subs = (all || []).filter(x => (x.meal_type || '').toLowerCase() === meal_type);
+    if (!subs.length) {
+      showError(`No submissions for ${meal_type} on ${meal_date}.`);
+      return;
+    }
+
+    // 3) anchors từ winner:
+    //    - ưu tiên winner truyền vào từ vòng quay
+    //    - nếu không có (refresh/đi thẳng), thử lấy từ /wheel/picks/latest
+    let winner = (winnerName || '').trim();
+    if (!winner) {
+      winner = await getLatestWinner(selectedFamily.family_id, meal_date, meal_type) || '';
+    }
+    const anchors = winner ? [winner] : [];
+
+    // 4) chuẩn hoá submissions & headcount
+    const normalizedSubs = subs.map(normalizeSubmissionForBE);
+    const headcount = computeHeadcountFromSubs(subs);
+
+    // 5) gọi /api/plan/generate theo wheel-first
+    const payload = {
+      family_id: selectedFamily.family_id,
+      meal_date,
+      meal_type,
+      headcount,
+      feedback: "",
+      submissions: normalizedSubs,
+      anchors,          // ⬅️ neo winner lên đầu
+      hard_lock: true   // ⬅️ giữ winner, tránh bị thay/loại
+    };
+
+    const gen = await fetch(`${API_BASE}/plan/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!gen.ok) {
+      const txt = await gen.text();
+      let msg = `HTTP ${gen.status}: ${txt}`;
+      try { const j = JSON.parse(txt); msg = j.detail || j.message || msg; } catch {}
+      throw new Error(msg);
+    }
+    const data = await gen.json();
+    if (data.plan_id) {
+      window.location.href = `history.html?tab=plans&planId=${data.plan_id}`;
+      return;
+    }
+    showSuccess('Plan generated (no plan_id). Check console.');
+    console.log('Generate result:', data);
+  } catch (e) {
+    console.error(e);
+    showError(e.message || 'Failed to generate plan.');
+  }
+}
+
+/* ============================================================
+   Wheel → Suggestions + Generate
+   - Gọi API /api/plan/suggest nếu có, fallback client-side
+   - Khi generate: load submissions từ DB, thêm "wheel hint"
+============================================================ */
+
+// /** Heuristic fallback: sinh 3 món “cùng style/cách chế biến” */
+// function localSimilarDishes(seed, opts = {}) {
+//   const style = (opts.style||'').toLowerCase();
+//   const methodLex = [
+//     {key:'fried', alts:['stir-fried','pan-fried','deep-fried','crispy']},
+//     {key:'grill', alts:['grilled','charcoal','barbecue']},
+//     {key:'stew',  alts:['braised','slow-cooked','hot pot']},
+//     {key:'soup',  alts:['broth','clear soup','miso soup']},
+//     {key:'steam', alts:['steamed']},
+//     {key:'roast', alts:['roasted','oven-baked','baked']},
+//     {key:'saute', alts:['sautéed','stir-fried']}
+//   ];
+//   const libsByStyle = {
+//     chinese: [
+//       'Kung Pao Chicken','Mapo Tofu','Stir-fried Bok Choy','Soy-braised Pork',
+//       'Egg Drop Soup','Steamed Fish with Ginger','Beef Chow Fun'
+//     ],
+//     japanese: [
+//       'Chicken Teriyaki','Miso Soup','Tonkatsu','Tempura Vegetables',
+//       'Salmon Don','Niku Udon','Gyudon'
+//     ],
+//     korean: [
+//       'Bulgogi','Kimchi Jjigae','Japchae','Spicy Pork Stir-fry',
+//       'Bibimbap','Soy-braised Potatoes','Korean Seaweed Soup'
+//     ],
+//     vietnamese: [
+//       'Thịt Kho Trứng','Rau Muống Xào Tỏi','Canh Chua Cá','Gà Nướng Sả',
+//       'Phở Bò (home style)','Bún Chả','Đậu Hũ Sốt Cà'
+//     ],
+//     western: [
+//       'Roasted Chicken','Creamy Mushroom Soup','Pasta Aglio e Olio',
+//       'Grilled Vegetables','Mashed Potatoes','Baked Salmon'
+//     ],
+//     italian: [
+//       'Spaghetti Carbonara','Minestrone Soup','Chicken Alfredo',
+//       'Margherita Pizza','Penne Arrabbiata','Bruschetta'
+//     ]
+//   };
+//   const base = libsByStyle[style] || libsByStyle['western'];
+//   // lấy keyword cách chế biến trong seed
+//   const s = (seed||'').toLowerCase();
+//   let hints = [];
+//   methodLex.forEach(m=>{
+//     if (s.includes(m.key) || m.alts.some(a=>s.includes(a))) hints = hints.concat(m.alts);
+//   });
+//   // chọn 3 món khác seed, ưu tiên tên chứa hint
+//   const pool = base.filter(x => x.toLowerCase() !== s);
+//   const scored = pool.map(name=>{
+//     const ln = name.toLowerCase();
+//     let score = 0;
+//     if (style && ln.includes(style)) score += 1;
+//     hints.forEach(h=>{ if(ln.includes(h)) score += 2; });
+//     if (/soup|brais|stew|stir|grill|roast|steam|fry/i.test(ln)) score += 1;
+//     return {name, score};
+//   }).sort((a,b)=>b.score-a.score);
+//   const out = [];
+//   for (let i=0; i<scored.length && out.length<3; i++){
+//     if (!out.find(x=>x.toLowerCase() === scored[i].name.toLowerCase())) out.push(scored[i].name);
+//   }
+//   // nếu thiếu thì bổ sung ngẫu nhiên
+//   while (out.length<3) {
+//     const cand = pool[Math.floor(Math.random()*pool.length)];
+//     if (cand && !out.includes(cand)) out.push(cand);
+//   }
+//   return out.slice(0,3);
+// }
+
+/** Thử gọi BE gợi ý; nếu không có route thì fallback local */
+// async function fetchSimilarDishes(seedDish){
+//   const date  = $('#mealDate').value;
+//   const type  = $('#mealType').value;
+//   const famId = selectedFamily?.family_id;
+//   const style = ''; // không còn field foodStyle; backend sẽ tự infer từ DB nếu cần
+//
+//   // Nếu thiếu thông tin bắt buộc thì fallback local luôn
+//   if (!seedDish || !date || !type || !famId) {
+//     return localSimilarDishes(seedDish || '', { style });
+//   }
+//
+//   try{
+//     const r = await fetch(`${API_BASE}/plan/suggest`, {
+//       method: 'POST',
+//       headers: { 'Content-Type':'application/json' },
+//       body: JSON.stringify({
+//         seed_dish: seedDish,
+//         family_id: famId,
+//         meal_date: date,
+//         meal_type: type
+//         // không gửi style hint nữa
+//       })
+//     });
+//
+//     if (r.ok){
+//       const data = await r.json();
+//       if (data && Array.isArray(data.suggestions) && data.suggestions.length > 0){
+//         return data.suggestions.slice(0, 3);
+//       }
+//     }
+//     // fallback nếu BE không trả đủ 3 gợi ý
+//     return localSimilarDishes(seedDish, { style });
+//   }catch(_){
+//     return localSimilarDishes(seedDish, { style });
+//   }
+// }
+
+async function showWheelSuggestions(pickedDish){
+  if(!(selectedFamily && selectedFamily.role === 'holder')){
+    showError('Only the family holder can generate a plan.');
+    return;
+  }
+
+  const block = document.getElementById('suggestionsBlock');
+  const pickedCard = document.getElementById('pickedCard');
+  if (!block || !pickedCard) return;
+
+  block.classList.remove('hidden');
+
+  function getProposerOf(name){
+    const c = (wheelState.candidates||[]).find(x => String(x.name).toLowerCase() === String(name).toLowerCase());
+    return c?.proposer_name || 'member';
+  }
+
+    pickedCard.innerHTML = `
+      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-semibold">Generate plan for “${escapeHtml(pickedDish)}”</div>
+            <div class="text-xs text-emerald-700 mt-1">
+              Picked on the wheel · proposer: ${escapeHtml(getProposerOf(pickedDish))}
+            </div>
+          </div>
+          <button type="button" class="btn btn-success"
+            data-dish="${escapeHtml(pickedDish)}" id="generatePickedBtn">
+            Generate plan
+          </button>
+        </div>
+
+        <!-- Progress area -->
+        <div id="genProgress" class="mt-4 hidden">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-600">Generating…</span>
+            <span id="genProgressLabel" class="text-sm text-gray-500">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded h-2 overflow-hidden">
+            <div id="genProgressBar" class="h-2 bg-emerald-500 w-0 transition-all duration-300"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+  const btn = document.getElementById('generatePickedBtn');
+  if (btn) {
+    btn.addEventListener('click', async ()=> {
+      await generatePlanFromDish(pickedDish);
+    });
+  }
+}
+
+function getSelectedCookingRoles() {
+  const selected = Array.from(document.querySelectorAll('.cooking-role-btn.selected'))
+    .map(b => b.dataset.role);
+  return {
+    is_chef:   selected.includes('chef'),
+    pre_work:  selected.includes('pre_work'),
+    after_work:selected.includes('after_work')
+  };
+}
+
+function readHeadcount() {
+  const n = parseInt(document.getElementById('participantCount')?.value, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+/** Generate plan lấy MÓN ĐƯỢC CHỌN làm THEME (không phụ thuộc submissions trong DB) */
+/** Generate plan lấy MÓN ĐƯỢC CHỌN làm THEME (kèm loading + progress UI) */
+async function generatePlanFromDish(dish){
+  if(!(selectedFamily && selectedFamily.role === 'holder')){
+    showError('Only the family holder can generate a plan.'); return;
+  }
+  if(!selectedFamily){ showError('Please select a family.'); return; }
+
+  const date = $('#mealDate').value;
+  const type = $('#mealType').value;
+  if(!(date && type)){ showError('Please select date & meal type.'); return; }
+
+  // ---- UI state
+  const btn = document.getElementById('generatePickedBtn');
+  const barWrap  = document.getElementById('genProgress');
+  const bar      = document.getElementById('genProgressBar');
+  const barLabel = document.getElementById('genProgressLabel');
+
+  function setProgress(p){
+    const v = Math.max(0, Math.min(100, Math.round(p)));
+    if (bar)      bar.style.width  = v + '%';
+    if (barLabel) barLabel.textContent = v + '%';
+  }
+  function startLoading(){
+    if (btn){
+      btn.classList.add('loading');
+      btn.textContent = 'Generating…';
+    }
+    if (barWrap){
+      barWrap.classList.remove('hidden');
+      setProgress(8);
+    }
+  }
+  function endLoading(ok){
+    if (btn){
+      btn.classList.remove('loading');
+      btn.textContent = ok ? 'Open plan' : 'Generate plan';
+    }
+  }
+
+  // Timer “optimistic progress” (không có SSE thì ta tăng dần tới 90%)
+  let prog = 8;
+  let timer = null;
+  function startTimer(){
+    clearInterval(timer);
+    timer = setInterval(()=>{
+      // tăng chậm dần, không vượt quá 90%
+      prog = Math.min(90, prog + (prog < 50 ? 3 : 1));
+      setProgress(prog);
+    }, 300);
+  }
+  function stopTimer(){
+    clearInterval(timer);
+    timer = null;
+  }
+
+  try{
+    startLoading();
+    startTimer();
+
+    // Ước lượng headcount (có thể để BE tự tính)
+    let headcount = await fetchFamilyMemberCount(selectedFamily.family_id);
+    if (!Number.isFinite(headcount) || headcount <= 0) headcount = 1;
+
+    const roles = getSelectedCookingRoles();
+    const themeRemark =
+      `THEME: ${dish}\n` +
+      `Please center the meal around "${dish}". ` +
+      `If applicable, include at least 2 variations of "${dish}" and 1–2 complementary side dishes. ` +
+      `Keep names as English with Chinese in parentheses.`;
+
+    const submissionData = [
+      {
+        user_id: currentUser.user_id,
+        role: selectedFamily.role || 'member',
+        display_name: currentUser.user_name,
+        preferences: { is_chef: roles.is_chef, pre_work: roles.pre_work, after_work: roles.after_work },
+        remark: '',
+        drinks: ''
+      },
+      {
+        user_id: 'wheel_hint',
+        role: 'member',
+        display_name: 'Wheel/AI',
+        preferences: {},
+        remark: themeRemark,
+        drinks: ''
+      }
+    ];
+
+    // Gửi request
+    setProgress(20);
+    const genRes = await fetch(`${API_BASE}/plan/generate?user_id=${encodeURIComponent(currentUser.user_id)}`, {
+      method:'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        family_id: selectedFamily.family_id,
+        meal_date: date,
+        meal_type: type,
+        headcount,
+        feedback: '',
+        submissions: submissionData
+      })
+    });
+
+    // Khi server đã phản hồi header
+    setProgress(60);
+
+    if(!genRes.ok){
+      const txt = await genRes.text();
+      throw new Error(`Generate failed: ${txt}`);
+    }
+
+    const planData = await genRes.json();
+
+    // Hoàn tất
+    stopTimer();
+    setProgress(100);
+    endLoading(true);
+
+    // Điều hướng (đợi 200ms để người dùng thấy 100%)
+    setTimeout(()=>{
+      window.location.href = `history.html?tab=plans&planId=${planData.plan_id}`;
+    }, 200);
+
+  }catch(err){
+    console.error(err);
+    stopTimer();
+    endLoading(false);
+    setProgress(0);
+    showError(err.message || 'Error generating plan.');
+  }
+}
+
+
+function safeJSON(s){
+  try{ return JSON.parse(s); }catch{ return null; }
+}
+
+// Ẩn gợi ý khi đổi ngày/bữa
+['mealDate','mealType'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('change', ()=>{
+    const sb = document.getElementById('suggestionsBlock'); if (sb) sb.classList.add('hidden');
+    const pc = document.getElementById('pickedCard'); if (pc) pc.innerHTML='';
+    const sr = document.getElementById('spinResult'); if (sr) sr.textContent='';
+  });
+});
+
+window.addEventListener('beforeunload', persistRolesToLocal);
+// Cleanup polling on unload
+window.addEventListener('beforeunload', () => {
+  if (activeMealPollTimer) {
+    clearInterval(activeMealPollTimer);
+    activeMealPollTimer = null;
+  }
+});
+// CẢNH BÁO nếu có thay đổi mà chưa bấm Save
+window.addEventListener('beforeunload', (e) => {
+  if (prefDirty) {
+    // Chrome/Edge/Firefox: cần set returnValue để hiện native prompt
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth - Meal Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Debug Authentication</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Session Storage Data</h2>
+            <div id="sessionData" class="bg-gray-100 p-4 rounded font-mono text-sm"></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Local Storage Data</h2>
+            <div id="localData" class="bg-gray-100 p-4 rounded font-mono text-sm"></div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">API Test</h2>
+            <div class="space-x-2 mb-4">
+                <button id="testAuth" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Test Authentication
+                </button>
+                <button id="testCrossPage" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Test Cross-Page Auth
+                </button>
+                <button id="clearAuth" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Clear Auth Data
+                </button>
+            </div>
+            <div id="authResult" class="mt-4 bg-gray-100 p-4 rounded font-mono text-sm"></div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        
+        // Display storage data
+        function displayStorageData() {
+            const sessionData = document.getElementById('sessionData');
+            const localData = document.getElementById('localData');
+            
+            // Session storage
+            let sessionHtml = '<h3 class="font-bold mb-2">Session Storage:</h3>';
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                sessionHtml += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+            sessionData.innerHTML = sessionHtml;
+            
+            // Local storage
+            let localHtml = '<h3 class="font-bold mb-2">Local Storage:</h3>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                localHtml += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+            localData.innerHTML = localHtml;
+        }
+        
+        // Test authentication
+        async function testAuth() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = 'Testing authentication...';
+            
+            try {
+                const user = await checkUserAuth();
+                if (user) {
+                    resultDiv.innerHTML = `
+                        <div class="text-green-600 font-bold">Authentication Success!</div>
+                        <div><strong>User ID:</strong> ${user.user_id}</div>
+                        <div><strong>User Name:</strong> ${user.user_name}</div>
+                        <div><strong>Full User Object:</strong></div>
+                        <pre>${JSON.stringify(user, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="text-red-600 font-bold">Authentication Failed - No user found</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-600 font-bold">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Test cross-page authentication
+        function testCrossPage() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = 'Testing cross-page authentication...';
+            
+            // Check if we can access the same user data that would be available in other pages
+            const userData = sessionStorage.getItem('currentUser');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    resultDiv.innerHTML = `
+                        <div class="text-green-600 font-bold">Cross-Page Auth Success!</div>
+                        <div><strong>User ID:</strong> ${user.user_id}</div>
+                        <div><strong>User Name:</strong> ${user.user_name}</div>
+                        <div class="text-sm text-gray-600 mt-2">This user data is now accessible across all pages!</div>
+                    `;
+                } catch (error) {
+                    resultDiv.innerHTML = `<div class="text-red-600 font-bold">Error parsing user data: ${error.message}</div>`;
+                }
+            } else {
+                resultDiv.innerHTML = '<div class="text-red-600 font-bold">No user data found in sessionStorage</div>';
+            }
+        }
+        
+        // Clear authentication data
+        function clearAuth() {
+            clearUserData();
+            displayStorageData();
+            document.getElementById('authResult').innerHTML = '<div class="text-yellow-600 font-bold">Authentication data cleared!</div>';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            displayStorageData();
+            
+            document.getElementById('testAuth').addEventListener('click', testAuth);
+            document.getElementById('testCrossPage').addEventListener('click', testCrossPage);
+            document.getElementById('clearAuth').addEventListener('click', clearAuth);
+        });
+    </script>
+</body>
+</html>

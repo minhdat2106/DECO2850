@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Invite Member</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .hidden {
+            display: none;
+        }
+        .family-selector {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: #f9fafb;
+        }
+        .family-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .family-option:hover {
+            background: #f3f4f6;
+        }
+        .family-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .confirmation-section {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen py-8">
+        <div class="max-w-2xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-8 fade-in">
+                <h1 class="text-4xl font-bold text-white mb-4">👥 Invite Member</h1>
+                <p class="text-xl text-blue-100">Invite someone to join your family</p>
+            </div>
+
+            <!-- Main Form -->
+            <div class="section fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Send Invitation</h2>
+                
+                <!-- Alert Messages -->
+                <div id="alertContainer"></div>
+
+                <!-- Family Selection -->
+                <div class="form-group">
+                    <label class="form-label">Select Family</label>
+                    <div id="familySelector" class="family-selector">
+                        <p class="text-gray-500 italic">Loading families...</p>
+                    </div>
+                </div>
+
+                <!-- User ID Input -->
+                <div class="form-group">
+                    <label for="invitedUserId" class="form-label">User ID to Invite</label>
+                    <input 
+                        type="text" 
+                        id="invitedUserId" 
+                        class="form-input" 
+                        placeholder="Enter the user ID you want to invite"
+                        required
+                    >
+                </div>
+
+                <!-- Invite Button -->
+                <div class="form-group">
+                    <button id="inviteBtn" class="btn btn-primary w-full" disabled>
+                        Send Invitation
+                    </button>
+                </div>
+
+                <!-- Confirmation Section -->
+                <div id="confirmationSection" class="confirmation-section hidden">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">Confirm Invitation</h3>
+                    <p class="text-blue-700 mb-4">
+                        You are about to invite <strong id="invitedUserName"></strong> 
+                        to join <strong id="selectedFamilyName"></strong>.
+                    </p>
+                    <div class="flex space-x-3">
+                        <button id="confirmInviteBtn" class="btn btn-success">
+                            Confirm Invitation
+                        </button>
+                        <button id="cancelInviteBtn" class="btn btn-secondary">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center">
+                <button id="backBtn" class="btn btn-secondary">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        
+        let currentUser = null;
+        let families = [];
+        let selectedFamily = null;
+        let invitedUser = null;
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            // Use auth.js for proper authentication
+            initAuth(
+                async (user) => {
+                    currentUser = user;
+                    setupEventListeners();
+                    await loadFamilies();
+                },
+                () => {
+                    window.location.href = 'index.html';
+                }
+            );
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+
+            // Invite button
+            document.getElementById('inviteBtn').addEventListener('click', handleInvite);
+
+            // Confirm invitation button
+            document.getElementById('confirmInviteBtn').addEventListener('click', confirmInvitation);
+
+            // Cancel invitation button
+            document.getElementById('cancelInviteBtn').addEventListener('click', cancelInvitation);
+
+            // User ID input
+            document.getElementById('invitedUserId').addEventListener('input', () => {
+                updateInviteButton();
+            });
+        }
+
+        // Load user's families
+        async function loadFamilies() {
+            try {
+                const response = await fetch(`${API_BASE}/user/${currentUser.user_id}/families`);
+                if (response.ok) {
+                    families = await response.json();
+                    displayFamilies();
+                } else {
+                    showAlert('Failed to load families', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading families:', error);
+                showAlert('Error loading families', 'error');
+            }
+        }
+
+        // Display families
+        function displayFamilies() {
+            const container = document.getElementById('familySelector');
+            container.innerHTML = '';
+
+            if (families.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic">No families found. Please create a family first.</p>';
+                return;
+            }
+
+            families.forEach(family => {
+                const familyOption = document.createElement('div');
+                familyOption.className = 'family-option';
+                familyOption.dataset.familyId = family.family_id;
+                familyOption.innerHTML = `
+                    <div>
+                        <div class="font-semibold text-gray-800">${family.family_name}</div>
+                        <div class="text-sm text-gray-600">ID: ${family.family_id}</div>
+                    </div>
+                    <div class="text-sm text-gray-500">Click to select</div>
+                `;
+                
+                familyOption.addEventListener('click', () => selectFamily(family));
+                container.appendChild(familyOption);
+            });
+        }
+
+        // Select family
+        function selectFamily(family) {
+            // Remove previous selection
+            document.querySelectorAll('.family-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Select current family
+            const option = document.querySelector(`[data-family-id="${family.family_id}"]`);
+            option.classList.add('selected');
+            
+            selectedFamily = family;
+            updateInviteButton();
+        }
+
+        // Update invite button state
+        function updateInviteButton() {
+            const userId = document.getElementById('invitedUserId').value.trim();
+            const inviteBtn = document.getElementById('inviteBtn');
+            
+            inviteBtn.disabled = !selectedFamily || !userId;
+        }
+
+        // Handle invite button click
+        async function handleInvite() {
+            const userId = document.getElementById('invitedUserId').value.trim();
+            
+            if (!selectedFamily || !userId) {
+                showAlert('Please select a family and enter a user ID', 'error');
+                return;
+            }
+
+            try {
+                // Check if user exists
+                const response = await fetch(`${API_BASE}/user/${userId}`);
+                if (response.ok) {
+                    invitedUser = await response.json();
+                    showConfirmation();
+                } else if (response.status === 404) {
+                    showAlert('User not found. Please check the user ID.', 'error');
+                } else {
+                    showAlert('Error checking user. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error checking user:', error);
+                showAlert('Error checking user. Please try again.', 'error');
+            }
+        }
+
+        // Show confirmation section
+        function showConfirmation() {
+            document.getElementById('invitedUserName').textContent = invitedUser.user_name || invitedUser.user_id;
+            document.getElementById('selectedFamilyName').textContent = selectedFamily.family_name;
+            document.getElementById('confirmationSection').classList.remove('hidden');
+        }
+
+        // Confirm invitation
+        async function confirmInvitation() {
+            try {
+                const response = await fetch(`${API_BASE}/family/invite`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        family_id: selectedFamily.family_id,
+                        invited_user_id: invitedUser.user_id,
+                        inviter_user_id: currentUser.user_id
+                    })
+                });
+
+                if (response.ok) {
+                    showAlert(`Successfully invited ${invitedUser.user_name || invitedUser.user_id} to join ${selectedFamily.family_name}!`, 'success');
+                    resetForm();
+                } else {
+                    const error = await response.json();
+                    showAlert(`Error sending invitation: ${error.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error sending invitation:', error);
+                showAlert('Error sending invitation. Please try again.', 'error');
+            }
+        }
+
+        // Cancel invitation
+        function cancelInvitation() {
+            document.getElementById('confirmationSection').classList.add('hidden');
+            invitedUser = null;
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('invitedUserId').value = '';
+            document.getElementById('confirmationSection').classList.add('hidden');
+            document.querySelectorAll('.family-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            selectedFamily = null;
+            invitedUser = null;
+            updateInviteButton();
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
