@@ -9,7 +9,7 @@ from ..database import db_query, db_execute
 from ..utils import log_api_call, log_error
 
 logger = logging.getLogger("meal")
-router = APIRouter(prefix="/api/submissions", tags=["submission"])
+router = APIRouter(tags=["submission"])
 
 @router.post("/submit")
 def submit_info(request: InfoCollectIn):
@@ -298,4 +298,5 @@ def get_submission_details(submission_id: int):
     except Exception as e:
         log_error(e, f"get_submission_details {submission_id}")
         raise HTTPException(500, "Internal server error")
+
 
