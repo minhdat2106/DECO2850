@@ -32,7 +32,7 @@ ENGLISH_SYSTEM_PROMPT = (
 )
 
 logger = logging.getLogger("meal")
-router = APIRouter(prefix="/api/plan", tags=["plan"])
+router = APIRouter(tags=["plan"])
 
 def postprocess_with_anchors(plan_obj: dict, anchors: list[str], hard_lock: bool = False) -> dict:
     """
