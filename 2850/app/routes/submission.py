@@ -4,9 +4,9 @@ Submission-related API routes (meal_code-optional)
 import json
 import logging
 from fastapi import APIRouter, HTTPException, Query
-from models import InfoCollectIn
-from database import db_query, db_execute
-from utils import log_api_call, log_error
+from ..models import InfoCollectIn
+from ..database import db_query, db_execute
+from ..utils import log_api_call, log_error
 
 logger = logging.getLogger("meal")
 router = APIRouter(prefix="/api/submissions", tags=["submission"])
@@ -298,3 +298,4 @@ def get_submission_details(submission_id: int):
     except Exception as e:
         log_error(e, f"get_submission_details {submission_id}")
         raise HTTPException(500, "Internal server error")
+
