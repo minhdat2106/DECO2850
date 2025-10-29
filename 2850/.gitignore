@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.env
+venv/
+.env.*
+
+# logs
+logs/
+*.log
