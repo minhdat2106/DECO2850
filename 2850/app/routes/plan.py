@@ -11,10 +11,10 @@ from typing import List, Dict, Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Body
 
-from models import GenerateRequest, PlanIngest  # (không cần model mới cho /suggest)
-from database import db_query, db_execute
-from utils import coerce_to_lan_schema, render_plan_html, log_api_call, log_error, get_meal_time_by_type
-from config import OPENAI_CONFIG
+from ..models import GenerateRequest, PlanIngest  # (không cần model mới cho /suggest)
+from ..database import db_query, db_execute
+from ..utils import coerce_to_lan_schema, render_plan_html, log_api_call, log_error, get_meal_time_by_type
+from ..config import OPENAI_CONFIG
 
 
 # --- OpenAI client (giữ nguyên cách bạn đang dùng) ---
