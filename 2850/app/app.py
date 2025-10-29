@@ -337,3 +337,4 @@ if __name__ == "__main__":
     # Port mặc định 8765 để khớp file auth.js của bạn
     port = int(os.getenv("PORT", "8765"))
     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+
