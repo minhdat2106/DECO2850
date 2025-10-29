@@ -6,7 +6,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from ..models import UserRegister, UserLogin, UserUpdateRequest, UserInfo
-from .database import db_query, db_execute          # ⬅️ cùng thư mục -> 1 chấm
+from ..database import db_query, db_execute          # ⬅️ cùng thư mục -> 1 chấm
 from ..utils import validate_user_id, log_api_call, log_error
 
 logger = logging.getLogger("meal")
@@ -188,3 +188,4 @@ def get_user_info(user_id: str):
     except Exception as e:
         log_error(e, f"get_user_info for user {user_id}")
         raise HTTPException(500, "Internal server error")
+
