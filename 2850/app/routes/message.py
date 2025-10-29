@@ -5,8 +5,8 @@ import json
 import logging
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
-from database import db_query, db_execute
-from utils import log_api_call, log_error
+from ..database import db_query, db_execute
+from ..utils import log_api_call, log_error
 
 logger = logging.getLogger("meal")
 router = APIRouter(prefix="/api/messages", tags=["message"])
@@ -182,3 +182,4 @@ def notify_plan_generated(
     except Exception as e:
         log_error(e, f"notify_plan_generated for family {family_id}")
         raise HTTPException(500, "Internal server error")
+
