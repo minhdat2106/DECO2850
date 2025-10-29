@@ -8,7 +8,7 @@ from ..database import db_query, db_execute
 from ..utils import generate_meal_code, parse_meal_code, log_api_call, log_error
 
 logger = logging.getLogger("meal")
-router = APIRouter(prefix="/api/meal-code", tags=["meal-code"])
+router = APIRouter(tags=["meal-code"])
 
 # Global storage for meal code types (in production, use database)
 meal_code_types = {}
@@ -150,4 +150,5 @@ def get_user_meal_codes(user_id: str):
     except Exception as e:
         log_error(e, f"get_user_meal_codes for user {user_id}")
         raise HTTPException(500, "Internal server error")
+
 
