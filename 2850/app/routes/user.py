@@ -4,9 +4,9 @@ User-related API routes
 import json
 import logging
 from fastapi import APIRouter, HTTPException
-from models import UserRegister, UserLogin, UserUpdateRequest, UserInfo
-from database import db_query, db_execute
-from utils import validate_user_id, log_api_call, log_error
+from ..models import UserRegister, UserLogin, UserUpdateRequest, UserInfo
+from ..database import db_query, db_execute
+from ..utils import validate_user_id, log_api_call, log_error
 
 logger = logging.getLogger("meal")
 router = APIRouter(prefix="/api/user", tags=["user"])
@@ -183,3 +183,4 @@ def get_user_info(user_id: str):
     except Exception as e:
         log_error(e, f"get_user_info for user {user_id}")
         raise HTTPException(500, "Internal server error")
+
