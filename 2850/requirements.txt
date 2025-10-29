@@ -4,4 +4,4 @@ requests
 beautifulsoup4
 mysql-connector-python
 psycopg2-binary>=2.9.10
-
+openai
