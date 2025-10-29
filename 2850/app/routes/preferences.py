@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException, Path, Query
 from pydantic import BaseModel
 import json
 
-from database import db_query, db_execute
-from utils import log_api_call, log_error
+from ..database import db_query, db_execute
+from ..utils import log_api_call, log_error
 
 router = APIRouter(prefix="/api/preferences", tags=["preferences"])
 
@@ -331,3 +331,4 @@ def merged_pref(
     except Exception as e:
         log_error(e, "merged_pref")
         raise HTTPException(500, "Internal server error")
+
