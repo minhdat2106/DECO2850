@@ -11,8 +11,8 @@ import logging
 from typing import Dict, Any, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Body
-from database import db_query, db_execute
-from utils import log_api_call, log_error
+from ..database import db_query, db_execute
+from ..utils import log_api_call, log_error
 
 logger = logging.getLogger("meal")
 router = APIRouter(prefix="/api/wheel", tags=["wheel"])
@@ -376,3 +376,4 @@ def get_latest_pick(
     except Exception as e:
         log_error(e, "wheel.get_latest_pick")
         raise HTTPException(500, "Internal server error")
+
