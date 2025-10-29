@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 import mysql.connector
 from mysql.connector import pooling
 
-from ..config import DB_CONFIG
+from config import DB_CONFIG
 
 logger = logging.getLogger("meal")
 
@@ -119,4 +119,5 @@ def close_pool():
         # mysql-connector pool không có close_all; GC sẽ dọn dẹp
         connection_pool = None
         logger.info("Database connection pool closed")
+
 
