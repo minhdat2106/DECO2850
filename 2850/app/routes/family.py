@@ -20,7 +20,7 @@ from ..utils import (
 )
 
 logger = logging.getLogger("meal")
-router = APIRouter(prefix="/api/family", tags=["family"])
+router = APIRouter(tags=["family"])
 
 # ---------- helpers for meal-times ----------
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
@@ -473,4 +473,5 @@ def set_active_meal(family_id: str, body: SetActiveMealBody):
     except Exception as e:
         log_error(e, f"set_active_meal for family {family_id}")
         raise HTTPException(500, "Internal server error")
+
 
